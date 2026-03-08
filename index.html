@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -67,9 +66,10 @@
   .share-url{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:8px 11px;font-size:11px;color:var(--text2);font-family:'Space Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
   .ccount{font-family:'Space Mono',monospace;font-size:12px;color:var(--text3)}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
-  .grid.list{grid-template-columns:1fr;gap:8px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .2s;animation:fadeUp .35s ease both;position:relative;overflow:hidden}
+  .grid{display:block;position:relative}
+  .grid.list{display:block}
+  .virt-spacer-top,.virt-spacer-bot{width:100%;pointer-events:none}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:background .2s,border-color .2s,transform .2s,box-shadow .2s;position:relative;overflow:hidden;margin-bottom:8px}
   .card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:opacity .2s}
   .card:hover{background:var(--card-hover);border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow)}
   .card:hover::after{opacity:1}
@@ -153,132 +153,129 @@
   /* ── スクロールバー ── */
   ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 
-/* ── PC: sp-only非表示 ── */
-.sp-only{display:none!important}
-@media(max-width:768px){.sp-only{display:flex!important}}
+  /* ── PC: sp-only非表示 ── */
+  .sp-only{display:none!important}
+  @media(max-width:768px){.sp-only{display:flex!important}}
 
-/* ── モバイル ── */
-@media(max-width:768px){
-header{padding:0 12px}
-.hi{height:52px;gap:8px}
-.logo{font-size:14px}
-.hsearch{max-width:none;flex:1}
-.hact{gap:4px}
-.bico{width:34px;height:34px;font-size:13px}
-/* PCのtheme/refresh非表示（ボトムナビで代替） */
-#themeBtn,#refreshBtn{display:none}
-.main{grid-template-columns:1fr;padding:10px;gap:10px}
-.sidebar{display:none}
-.ca{min-width:0}
-.cat-badge{background:var(–bg);color:var(–text3);border-radius:99px;padding:1px 6px;font-size:9px;font-weight:700;margin-left:3px;font-family:‘Space Mono’,monospace}
-.tag.active .cat-badge{background:rgba(255,255,255,.2);color:#fff}
-.aupdated{font-size:10px;color:var(–text3);margin:2px 0 6px;font-family:‘Space Mono’,monospace}
-.btn-copy{background:transparent;color:var(–text3);border:1px solid var(–border);border-radius:99px;padding:5px 10px;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px;white-space:nowrap}
-.btn-copy:hover{border-color:var(–accent);color:var(–accent)}
-.share-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
-.share-url{flex:1;background:var(–bg3);border:1px solid var(–border);border-radius:var(–rs);padding:8px 11px;font-size:11px;color:var(–text2);font-family:‘Space Mono’,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cbar{margin-bottom:10px}
-/* カード1列 */
-.grid{grid-template-columns:1fr;gap:8px}
-.grid.list{gap:6px}
-/* カードは横並び（アイコン＋メタ＋ボタン） */
-.card{padding:12px 14px;display:flex;align-items:center;gap:12px}
-.card::after{display:none}
-.card:hover{transform:none}
-.srcbadge{display:none}
-.ctop{margin-bottom:0;flex:1;min-width:0;gap:10px;align-items:center}
-.aico{width:46px;height:46px;border-radius:11px;font-size:22px;flex-shrink:0}
-.ameta{flex:1;min-width:0}
-.aname{font-size:13px}
-.adev{font-size:11px}
-.aver{font-size:10px}
-/* descとカテゴリタグは非表示（カードタップでモーダル） */
-.adesc,.atags{display:none}
-/* cbot はボタンだけ残す */
-.cbot{flex-shrink:0;justify-content:flex-end}
-.cbtnrow{flex-shrink:0;display:flex;flex-direction:column;gap:4px}
-.btn-install{font-size:11px;padding:5px 11px;white-space:nowrap}
-.btn-dl{font-size:11px;padding:5px 9px;white-space:nowrap}
-/* リスト表示はグリッドと同じ扱い */
-.grid.list .card{display:flex;align-items:center;gap:12px}
-.grid.list .ctop{flex:1}
-.grid.list .aico{width:40px;height:40px}
-/* モーダル */
-.modal{border-radius:20px 20px 0 0;max-height:92vh;padding:20px 18px}
-.overlay{align-items:flex-end;padding:0}
-.mhead{gap:12px}
-.mico{width:54px;height:54px}
-.mtitle{font-size:17px}
-.mgrid{grid-template-columns:1fr 1fr}
-.mactions{flex-direction:column;gap:8px}
-/* ボトムナビ分のpadding */
-#appShell{padding-bottom:68px}
-.toasts{bottom:76px;right:12px;left:12px}
-.toast{max-width:none}
-}
+  /* ── モバイル ── */
+  @media(max-width:768px){
+    header{padding:0 12px}
+    .hi{height:52px;gap:8px}
+    .logo{font-size:14px}
+    .hsearch{max-width:none;flex:1}
+    .hact{gap:4px}
+    .bico{width:34px;height:34px;font-size:13px}
+    /* PCのtheme/refresh非表示（ボトムナビで代替） */
+    #themeBtn,#refreshBtn{display:none}
+    .main{grid-template-columns:1fr;padding:10px;gap:10px}
+    .sidebar{display:none}
+    .ca{min-width:0}
+  .cat-badge{background:var(--bg);color:var(--text3);border-radius:99px;padding:1px 6px;font-size:9px;font-weight:700;margin-left:3px;font-family:'Space Mono',monospace}
+  .tag.active .cat-badge{background:rgba(255,255,255,.2);color:#fff}
+  .aupdated{font-size:10px;color:var(--text3);margin:2px 0 6px;font-family:'Space Mono',monospace}
+  .btn-copy{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:99px;padding:5px 10px;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+  .btn-copy:hover{border-color:var(--accent);color:var(--accent)}
+  .share-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .share-url{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:8px 11px;font-size:11px;color:var(--text2);font-family:'Space Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cbar{margin-bottom:10px}
+    /* カード1列 */
+    /* カードは横並び（アイコン＋メタ＋ボタン） */
+    .card{padding:12px 14px;display:flex;align-items:center;gap:12px;margin-bottom:6px}
+    .card::after{display:none}
+    .card:hover{transform:none}
+    .srcbadge{display:none}
+    .ctop{margin-bottom:0;flex:1;min-width:0;gap:10px;align-items:center}
+    .aico{width:46px;height:46px;border-radius:11px;font-size:22px;flex-shrink:0}
+    .ameta{flex:1;min-width:0}
+    .aname{font-size:13px}
+    .adev{font-size:11px}
+    .aver{font-size:10px}
+    /* descとカテゴリタグは非表示（カードタップでモーダル） */
+    .adesc,.atags{display:none}
+    /* cbot はボタンだけ残す */
+    .cbot{flex-shrink:0;justify-content:flex-end}
+    .cbtnrow{flex-shrink:0;display:flex;flex-direction:column;gap:4px}
+    .btn-install{font-size:11px;padding:5px 11px;white-space:nowrap}
+    .btn-dl{font-size:11px;padding:5px 9px;white-space:nowrap}
+    /* リスト表示はグリッドと同じ扱い */
+    .grid.list .card{display:flex;align-items:center;gap:12px}
+    .grid.list .ctop{flex:1}
+    .grid.list .aico{width:40px;height:40px}
+    /* モーダル */
+    .modal{border-radius:20px 20px 0 0;max-height:92vh;padding:20px 18px}
+    .overlay{align-items:flex-end;padding:0}
+    .mhead{gap:12px}
+    .mico{width:54px;height:54px}
+    .mtitle{font-size:17px}
+    .mgrid{grid-template-columns:1fr 1fr}
+    .mactions{flex-direction:column;gap:8px}
+    /* ボトムナビ分のpadding */
+    #appShell{padding-bottom:68px}
+    .toasts{bottom:76px;right:12px;left:12px}
+    .toast{max-width:none}
+  }
 
-/* ── ボトムシート共通 ── */
-.sheet-overlay{display:none;position:fixed;inset:0;z-index:160;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
-.sheet-overlay.open{display:block}
-.bottom-sheet{
-position:fixed;bottom:0;left:0;right:0;z-index:161;
-background:var(–bg2);border-top:1px solid var(–border);
-border-radius:20px 20px 0 0;
-padding:10px 16px max(24px,env(safe-area-inset-bottom));
-max-height:80vh;overflow-y:auto;
-transform:translateY(100%);
-transition:transform .3s cubic-bezier(.4,0,.2,1);
-display:none;
-}
-.bottom-sheet.open{transform:translateY(0);display:block}
-.sheet-handle{width:36px;height:4px;border-radius:99px;background:var(–border);margin:0 auto 14px}
-.sheet-title{font-family:‘Space Mono’,monospace;font-size:11px;font-weight:700;color:var(–text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px}
-.sheet-body{padding-bottom:8px}
+  /* ── ボトムシート共通 ── */
+  .sheet-overlay{display:none;position:fixed;inset:0;z-index:160;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
+  .sheet-overlay.open{display:block}
+  .bottom-sheet{
+    position:fixed;bottom:0;left:0;right:0;z-index:161;
+    background:var(--bg2);border-top:1px solid var(--border);
+    border-radius:20px 20px 0 0;
+    padding:10px 16px max(24px,env(safe-area-inset-bottom));
+    max-height:80vh;overflow-y:auto;
+    transform:translateY(100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    display:none;
+  }
+  .bottom-sheet.open{transform:translateY(0);display:block}
+  .sheet-handle{width:36px;height:4px;border-radius:99px;background:var(--border);margin:0 auto 14px}
+  .sheet-title{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px}
+  .sheet-body{padding-bottom:8px}
 
-/* カテゴリシートのタグ */
-.sheet-body .tagrow{gap:8px}
-.sheet-body .tag{font-size:13px;padding:8px 16px}
+  /* カテゴリシートのタグ */
+  .sheet-body .tagrow{gap:8px}
+  .sheet-body .tag{font-size:13px;padding:8px 16px}
 
-/* 設定シート */
-.setting-row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(–border);cursor:pointer}
-.setting-row:last-of-type{border-bottom:none}
-.setting-ico{width:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.setting-label{flex:1;font-size:15px;color:var(–text)}
-.setting-arrow{font-size:20px;color:var(–text3)}
-.setting-section-title{font-size:11px;font-weight:700;color:var(–text3);text-transform:uppercase;letter-spacing:.1em;font-family:‘Space Mono’,monospace;margin:16px 0 8px}
-.sheet-sort-wrap{margin-bottom:4px}
-/* 設定内リポジトリリスト */
-#spRepoList .ri{padding:10px 4px}
+  /* 設定シート */
+  .setting-row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--border);cursor:pointer}
+  .setting-row:last-of-type{border-bottom:none}
+  .setting-ico{width:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .setting-label{flex:1;font-size:15px;color:var(--text)}
+  .setting-arrow{font-size:20px;color:var(--text3)}
+  .setting-section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;font-family:'Space Mono',monospace;margin:16px 0 8px}
+  .sheet-sort-wrap{margin-bottom:4px}
+  /* 設定内リポジトリリスト */
+  #spRepoList .ri{padding:10px 4px}
 
-/* ── ボトムナビ ── */
-.sp-nav{
-display:none;
-position:fixed;bottom:0;left:0;right:0;z-index:150;
-background:var(–bg2);border-top:1px solid var(–border);
-backdrop-filter:blur(20px);
-padding:6px 0 max(6px,env(safe-area-inset-bottom));
-}
-@media(max-width:768px){.sp-nav{display:block}}
-.sp-nav-inner{display:flex;justify-content:space-around}
-.sp-nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:transparent;color:var(–text3);cursor:pointer;padding:4px 0;font-size:10px;font-family:‘DM Sans’,sans-serif;transition:color .15s;-webkit-tap-highlight-color:transparent}
-.sp-nb.active{color:var(–accent)}
-.sp-nb-ico{width:22px;height:22px;display:flex;align-items:center;justify-content:center}
-@keyframes slideInLeft{from{transform:translateX(-100%)}to{transform:translateX(0)}}
-#loadScreen{position:fixed;inset:0;z-index:9999;background:var(–bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
-#loadScreen.done{opacity:0;visibility:hidden;pointer-events:none}
-.ls-logo{font-family:‘Space Mono’,monospace;font-size:22px;font-weight:700;color:var(–text);display:flex;align-items:center;gap:10px;margin-bottom:48px;animation:lsFadeIn .5s ease both}
-.ls-ldot{width:10px;height:10px;border-radius:50%;background:var(–accent);box-shadow:0 0 12px var(–accent);animation:blink 2s infinite}
-.ls-wrap{width:min(320px,80vw);animation:lsFadeIn .5s .1s ease both}
-.ls-track{width:100%;height:4px;background:var(–bg3);border-radius:99px;overflow:hidden;margin-bottom:16px;border:1px solid var(–border)}
-.ls-fill{height:100%;width:0%;background:linear-gradient(90deg,var(–accent),var(–accent2));border-radius:99px;transition:width .35s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(108,99,255,.6)}
-.ls-bot{display:flex;align-items:center;justify-content:space-between}
-.ls-status{font-size:12px;color:var(–text3);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;transition:opacity .15s}
-.ls-pct{font-family:‘Space Mono’,monospace;font-size:13px;font-weight:700;color:var(–accent);flex-shrink:0}
-@keyframes lsFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-#appShell{opacity:0;transition:opacity .5s ease}
-#appShell.visible{opacity:1}
+  /* ── ボトムナビ ── */
+  .sp-nav{
+    display:none;
+    position:fixed;bottom:0;left:0;right:0;z-index:150;
+    background:var(--bg2);border-top:1px solid var(--border);
+    backdrop-filter:blur(20px);
+    padding:6px 0 max(6px,env(safe-area-inset-bottom));
+  }
+  @media(max-width:768px){.sp-nav{display:block}}
+  .sp-nav-inner{display:flex;justify-content:space-around}
+  .sp-nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:transparent;color:var(--text3);cursor:pointer;padding:4px 0;font-size:10px;font-family:'DM Sans',sans-serif;transition:color .15s;-webkit-tap-highlight-color:transparent}
+  .sp-nb.active{color:var(--accent)}
+  .sp-nb-ico{width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+  @keyframes slideInLeft{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+  #loadScreen{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
+  #loadScreen.done{opacity:0;visibility:hidden;pointer-events:none}
+  .ls-logo{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px;margin-bottom:48px;animation:lsFadeIn .5s ease both}
+  .ls-ldot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:blink 2s infinite}
+  .ls-wrap{width:min(320px,80vw);animation:lsFadeIn .5s .1s ease both}
+  .ls-track{width:100%;height:4px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-bottom:16px;border:1px solid var(--border)}
+  .ls-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .35s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(108,99,255,.6)}
+  .ls-bot{display:flex;align-items:center;justify-content:space-between}
+  .ls-status{font-size:12px;color:var(--text3);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;transition:opacity .15s}
+  .ls-pct{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0}
+  @keyframes lsFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  #appShell{opacity:0;transition:opacity .5s ease}
+  #appShell.visible{opacity:1}
 </style>
-
 </head>
 <body>
 
@@ -336,13 +333,10 @@ padding:6px 0 max(6px,env(safe-area-inset-bottom));
     <div class="cbar">
       <div class="ccount" id="appCount">Loading…</div>
 
-```
-</div>
-<div class="grid list" id="appGrid">
-  <div class="lbox"><div class="spin"></div>Loading repositories…</div>
-</div>
-```
-
+    </div>
+    <div class="grid list" id="appGrid">
+      <div class="lbox"><div class="spin"></div>Loading repositories…</div>
+    </div>
   </div>
 </div>
 
@@ -350,11 +344,9 @@ padding:6px 0 max(6px,env(safe-area-inset-bottom));
 <div class="toasts" id="toasts"></div>
 
 <!-- シート系オーバーレイ（共通） -->
-
 <div class="sheet-overlay" id="sheetOverlay"></div>
 
 <!-- カテゴリシート -->
-
 <div class="bottom-sheet" id="catSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">Category</div>
@@ -362,7 +354,6 @@ padding:6px 0 max(6px,env(safe-area-inset-bottom));
 </div>
 
 <!-- 設定シート -->
-
 <div class="bottom-sheet" id="settingsSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">Settings</div>
@@ -393,7 +384,6 @@ padding:6px 0 max(6px,env(safe-area-inset-bottom));
 </div>
 
 <!-- スマホ用ボトムナビ -->
-
 <nav class="sp-nav">
   <div class="sp-nav-inner">
     <button class="sp-nb active" id="spNavApps">
@@ -701,6 +691,7 @@ function applyFilter(){
     default: a=[...a];
   }
   filtered=a;
+  window.scrollTo({top:0});
   renderApps();
 }
 
@@ -738,54 +729,106 @@ function renderCats(){
   };
 }
 
+// ── 仮想スクロール ────────────────────────────────────────────────
+const VIRT = {
+  ITEM_H: 74,      // カード1枚の高さ(px)＋margin
+  BUFFER: 10,      // 表示範囲の上下に余分に描画する件数
+  PAGE: 50,        // 1回に描画する件数
+  start: 0,        // 現在描画中の先頭インデックス
+  end: 0,          // 現在描画中の末尾インデックス
+  raf: null,
+};
+
+function buildCard(a){
+  const div=document.createElement('div');
+  div.className='card'+(favs.has(a.id)?' fav-card':'');
+  div.dataset.aid=a.id;
+  const ico=a.icon?`<img src="${esc(a.icon)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${a.emoji||'📦'}';">`:(a.emoji||'📦');
+  const tags=(a.cats||[]).slice(0,2).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
+  div.innerHTML=`<div class="srcbadge">${esc(a.repo)}</div>
+    <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div>
+    ${a.updatedAt?`<div class="aupdated">${fmtDate(a.updatedAt)}</div>`:''}
+    <div class="adesc">${esc(a.desc||'No description')}</div>
+    <div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-fav ${favs.has(a.id)?'on':''}" data-fav="${esc(a.id)}" title="Favorite"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='${favs.has(a.id)?'#ff6584':'none'}' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg></button><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>`;
+  return div;
+}
+
+function virtRender(){
+  const grid=document.getElementById('appGrid');
+  const total=filtered.length;
+  if(!total){
+    grid.innerHTML=`<div class="ebox"><div class="eico"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>No apps found</div>`;
+    return;
+  }
+
+  // スクロール位置から描画範囲を計算
+  const scrollY=window.scrollY;
+  const winH=window.innerHeight;
+  const rawStart=Math.floor(scrollY/VIRT.ITEM_H)-VIRT.BUFFER;
+  const rawEnd=Math.ceil((scrollY+winH)/VIRT.ITEM_H)+VIRT.BUFFER;
+  const newStart=Math.max(0,rawStart);
+  const newEnd=Math.min(total-1,rawEnd);
+
+  // 変化がなければスキップ
+  if(newStart===VIRT.start && newEnd===VIRT.end && grid.querySelector('.virt-spacer-top')) return;
+
+  VIRT.start=newStart;
+  VIRT.end=newEnd;
+
+  // スペーサー＋可視カードを一気に構築
+  const frag=document.createDocumentFragment();
+
+  // 上スペーサー
+  const topSpacer=document.createElement('div');
+  topSpacer.className='virt-spacer-top';
+  topSpacer.style.height=(newStart*VIRT.ITEM_H)+'px';
+  frag.appendChild(topSpacer);
+
+  // 可視範囲のカード
+  for(let i=newStart;i<=newEnd;i++){
+    frag.appendChild(buildCard(filtered[i]));
+  }
+
+  // 下スペーサー
+  const botSpacer=document.createElement('div');
+  botSpacer.className='virt-spacer-bot';
+  botSpacer.style.height=((total-1-newEnd)*VIRT.ITEM_H)+'px';
+  frag.appendChild(botSpacer);
+
+  grid.innerHTML='';
+  grid.appendChild(frag);
+}
+
 function renderApps(){
   const grid=document.getElementById('appGrid');
   document.getElementById('appCount').textContent=`${filtered.length} app${filtered.length!==1?'s':''}`;
-  if(!filtered.length){grid.innerHTML=`<div class="ebox"><div class="eico"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>No apps found</div>`;return;}
-  // DocumentFragmentで一括DOM構築
-  const frag=document.createDocumentFragment();
-  filtered.forEach((a,i)=>{
-    const div=document.createElement('div');
-    div.className='card'+(favs.has(a.id)?' fav-card':'');
-    div.dataset.aid=a.id;
-    // アニメーション遅延は最初の20件のみ（大量時にアニメが重い）
-    if(i<20) div.style.animationDelay=Math.min(i*20,300)+'ms';
-    const ico=a.icon?`<img src="${esc(a.icon)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${a.emoji||'📦'}';">`:(a.emoji||'📦');
-    const tags=(a.cats||[]).slice(0,2).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
-    div.innerHTML=`<div class="srcbadge">${esc(a.repo)}</div>
-      <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div>
-      ${a.updatedAt?`<div class="aupdated">${fmtDate(a.updatedAt)}</div>`:''}
-      <div class="adesc">${esc(a.desc||'No description')}</div>
-      <div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-fav ${favs.has(a.id)?'on':''}" data-fav="${esc(a.id)}" title="Favorite"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='${favs.has(a.id)?'#ff6584':'none'}' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg></button><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>`;
-    frag.appendChild(div);
-  });
-  grid.innerHTML='';
-  grid.appendChild(frag);
-  // イベント委譲で全カードに1個のリスナー
+  // スクロールをトップに戻してから仮想描画
+  VIRT.start=0;VIRT.end=0;
+  virtRender();
+  // イベント委譲（grid全体に1個）
   grid.onclick=e=>{
     const btn_i=e.target.closest('.btn-install');
     const btn_d=e.target.closest('.btn-dl');
     const btn_f=e.target.closest('.btn-fav');
     const card=e.target.closest('.card');
-    if(btn_i){
-      e.stopPropagation();
-      const app=appMap[btn_i.dataset.aid];if(app) openModal(app,true);return;
-    }
-    if(btn_d){
-      e.stopPropagation();
-      const url=btn_d.dataset.dl;
-      if(!url||url==='#'){toast('No download URL available',true);return;}
-      window.open(url,'_blank');toast('Download started!');return;
-    }
-    if(btn_f){
-      e.stopPropagation();
-      toggleFav(btn_f.dataset.fav);return;
-    }
-    if(card){
-      const app=appMap[card.dataset.aid];if(app) openModal(app);
-    }
+    if(btn_i){e.stopPropagation();const app=appMap[btn_i.dataset.aid];if(app)openModal(app,true);return;}
+    if(btn_d){e.stopPropagation();const url=btn_d.dataset.dl;if(!url||url==='#'){toast('No download URL available',true);return;}window.open(url,'_blank');toast('Download started!');return;}
+    if(btn_f){e.stopPropagation();toggleFav(btn_f.dataset.fav);return;}
+    if(card){const app=appMap[card.dataset.aid];if(app)openModal(app);}
   };
 }
+
+// スクロールイベントでvirtRenderを呼ぶ（RAFでスロットル）
+// リサイズ時も再描画
+window.addEventListener('resize',()=>{
+  if(VIRT.raf) return;
+  VIRT.raf=requestAnimationFrame(()=>{VIRT.raf=null;VIRT.start=-1;virtRender();});
+},{passive:true});
+
+window.addEventListener('scroll',()=>{
+  if(VIRT.raf) return;
+  VIRT.raf=requestAnimationFrame(()=>{VIRT.raf=null;virtRender();});
+},{passive:true});
 
 const COPY_SVG=`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
 const SHARE_SVG=`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
@@ -1070,6 +1113,5 @@ if('serviceWorker' in navigator){
 
 boot();
 </script>
-
 </body>
 </html>
