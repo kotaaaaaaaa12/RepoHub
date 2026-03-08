@@ -329,7 +329,7 @@ let repos=[],allApps=[],filtered=[];
 let activeCat='all',sort='name-asc',query='',isGrid=true;
 
 // Category Worker URL — デプロイ後にここを書き換えてな
-const CATEGORY_WORKER_URL = 'https://repohub-category-worker.kotaaaaaaaa12.workers.dev/';
+const CATEGORY_WORKER_URL = 'https://repohub-category-worker.kotaaaaaaaa12.workers.dev';
 
 const catCache={};
 
@@ -454,7 +454,7 @@ async function fetchRepo(repo){
     await delay(500);repo.apps=demoApps(repo);repo.status='ok';renderRepos();return;
   }
   try{
-    const proxy=`https://corsproxy.io/?url=${encodeURIComponent(repo.url)}`;
+    const proxy=`https://repohub-category-worker.kotaaaaaaaa12.workers.dev/fetch?url=${encodeURIComponent(repo.url)}`;
     const res=await fetch(proxy,{signal:AbortSignal.timeout(12000)});
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const text=await res.text();
