@@ -33,7 +33,7 @@
   .bico{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
   .bico:hover{border-color:var(--accent);color:var(--accent)}
   .main{max-width:1200px;margin:0 auto;padding:24px;display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start}
-  .sidebar{position:sticky;top:86px;display:flex;flex-direction:column;gap:14px}
+  .sidebar{position:sticky;top:86px;display:flex;flex-direction:column;gap:14px;max-height:calc(100vh - 100px);overflow-y:auto;scrollbar-width:thin}
   .sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px}
   .stitle{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
   .ri{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);margin-bottom:4px;transition:background .15s}
