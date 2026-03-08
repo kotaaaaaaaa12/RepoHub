@@ -234,7 +234,7 @@ padding:6px 0 max(6px,env(safe-area-inset-bottom));
 .sp-nb.active{color:var(–accent)}
 .sp-nb-ico{font-size:21px;line-height:1}
 @keyframes slideInLeft{from{transform:translateX(-100%)}to{transform:translateX(0)}}
-#loadScreen{position:fixed;inset:0;z-index:1000;background:var(–bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
+#loadScreen{position:fixed;inset:0;z-index:9999;background:var(–bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
 #loadScreen.done{opacity:0;visibility:hidden;pointer-events:none}
 .ls-logo{font-family:‘Space Mono’,monospace;font-size:22px;font-weight:700;color:var(–text);display:flex;align-items:center;gap:10px;margin-bottom:48px;animation:lsFadeIn .5s ease both}
 .ls-ldot{width:10px;height:10px;border-radius:50%;background:var(–accent);box-shadow:0 0 12px var(–accent);animation:blink 2s infinite}
@@ -542,13 +542,15 @@ async function fetchRepo(repo){
     repo.apps=demoApps(repo);
     toast(`${repo.name}: fetch failed (${e.message})`,true);
   }
-  renderRepos();
+  // ローディング中はステータスだけ更新（重いrenderRepos全体はbootのrebuildでまとめてやる）
 }
 
 function parseAltStore(json,repo){
   return(json.apps||[]).map(a=>{
     const v=a.versions?.[0];
-    return{id:`${repo.id}_${a.bundleIdentifier||Math.random()}`,name:a.name||'?',dev:a.developerName||json.name||repo.name,desc:a.localizedDescription||a.subtitle||'',ver:v?.version||a.version||'?',size:v?.size||a.size||0,dl:v?.downloadURL||a.downloadURL||'#',icon:a.iconURL||null,cats:a.category?[a.category]:(a.categories||[]),minOS:a.minimumOSVersion||null,bundle:a.bundleIdentifier||'',changelog:v?.localizedDescription||'',repo:repo.name,repoId:repo.id};
+    const obj={id:`${repo.id}_${a.bundleIdentifier||Math.random()}`,name:a.name||'?',dev:a.developerName||json.name||repo.name,desc:a.localizedDescription||a.subtitle||'',ver:v?.version||a.version||'?',size:v?.size||a.size||0,dl:v?.downloadURL||a.downloadURL||'#',icon:a.iconURL||null,cats:a.category?[a.category]:(a.categories||[]),minOS:a.minimumOSVersion||null,bundle:a.bundleIdentifier||'',changelog:v?.localizedDescription||'',repo:repo.name,repoId:repo.id};
+    obj._ql=(obj.name+' '+obj.dev+' '+obj.desc).toLowerCase();
+    return obj;
   });
 }
 
@@ -558,7 +560,7 @@ function parsePlist(text,repo){
   doc.querySelectorAll('dict').forEach(d=>{
     const obj={};
     d.querySelectorAll(':scope > key').forEach(k=>{obj[k.textContent]=k.nextElementSibling?.textContent||'';});
-    if(obj.name||obj.CFBundleIdentifier) apps.push({id:`${repo.id}_${obj.CFBundleIdentifier||Math.random()}`,name:obj.name||obj.CFBundleIdentifier||'?',dev:obj.developerName||repo.name,desc:obj.localizedDescription||'',ver:obj.version||'?',size:+obj.size||0,dl:obj.downloadURL||'#',icon:obj.iconURL||null,cats:obj.category?[obj.category]:[],minOS:obj.minimumOSVersion||null,bundle:obj.CFBundleIdentifier||'',changelog:'',repo:repo.name,repoId:repo.id});
+    if(obj.name||obj.CFBundleIdentifier){const n=obj.name||obj.CFBundleIdentifier||'?',dv=obj.developerName||repo.name,dc=obj.localizedDescription||'';apps.push({id:`${repo.id}_${obj.CFBundleIdentifier||Math.random()}`,name:n,dev:dv,desc:dc,ver:obj.version||'?',size:+obj.size||0,dl:obj.downloadURL||'#',icon:obj.iconURL||null,cats:obj.category?[obj.category]:[],minOS:obj.minimumOSVersion||null,bundle:obj.CFBundleIdentifier||'',changelog:'',repo:repo.name,repoId:repo.id,_ql:(n+' '+dv+' '+dc).toLowerCase()});}
   });
   return apps.length?apps:demoApps(repo);
 }
@@ -574,27 +576,47 @@ function demoApps(repo){
     desc:'Demo data. Add real repo URLs to repo.json to see actual apps.',
     ver:`${1+i%3}.${i%9}.0`,size:(10+i*15)*1024*1024,dl:'#',icon:null,
     emoji:DE[i%DE.length],cats:[DC[i%DC.length]],minOS:`${14+i%3}.0`,
-    bundle:DB[i%DB.length],changelog:'',repo:repo.name,repoId:repo.id,isDemo:true
+    bundle:DB[i%DB.length],changelog:'',repo:repo.name,repoId:repo.id,isDemo:true,_ql:(DN[i%DN.length]+' '+DD[i%DD.length]).toLowerCase()
   }));
 }
 
+// appMapをIDで高速検索するためのキャッシュ
+let appMap={};
+
 function rebuild(){
   allApps=repos.filter(r=>r.enabled).flatMap(r=>r.apps);
-  applyFilter();renderCats();renderRepos();
+  // IDマップを再構築（O(1)検索用）
+  appMap={};
+  allApps.forEach(a=>appMap[a.id]=a);
+  scheduleFilter();
+  renderCats();
+  renderRepos();
+}
+
+// renderAppsのデバウンス（連続呼び出しを1フレームにまとめる）
+let filterRaf=null;
+function scheduleFilter(){
+  if(filterRaf) cancelAnimationFrame(filterRaf);
+  filterRaf=requestAnimationFrame(()=>{filterRaf=null;applyFilter();});
 }
 
 function applyFilter(){
-  let a=[...allApps];
-  if(query){const q=query.toLowerCase();a=a.filter(x=>x.name.toLowerCase().includes(q)||x.dev.toLowerCase().includes(q)||x.desc.toLowerCase().includes(q));}
-  if(activeCat!=='all') a=a.filter(x=>x.cats?.includes(activeCat));
-  switch(sort){
-    case 'name-asc': a.sort((x,y)=>x.name.localeCompare(y.name));break;
-    case 'name-desc':a.sort((x,y)=>y.name.localeCompare(x.name));break;
-    case 'ver':      a.sort((x,y)=>y.ver.localeCompare(x.ver));break;
-    case 'size-desc':a.sort((x,y)=>y.size-x.size);break;
-    case 'size-asc': a.sort((x,y)=>x.size-y.size);break;
+  let a=allApps;
+  if(query){
+    const q=query.toLowerCase();
+    a=a.filter(x=>x._ql.includes(q));
   }
-  filtered=a;renderApps();
+  if(activeCat!=='all') a=a.filter(x=>x.cats&&x.cats.includes(activeCat));
+  switch(sort){
+    case 'name-asc': a=[...a].sort((x,y)=>x.name.localeCompare(y.name));break;
+    case 'name-desc':a=[...a].sort((x,y)=>y.name.localeCompare(x.name));break;
+    case 'ver':      a=[...a].sort((x,y)=>y.ver.localeCompare(x.ver));break;
+    case 'size-desc':a=[...a].sort((x,y)=>y.size-x.size);break;
+    case 'size-asc': a=[...a].sort((x,y)=>x.size-y.size);break;
+    default: a=[...a];
+  }
+  filtered=a;
+  renderApps();
 }
 
 function renderRepos(){
@@ -604,66 +626,69 @@ function renderRepos(){
     const sub=r.status==='loading'?`<span style="color:var(--warning)">Loading…</span>`:r.status==='err'?`<span style="color:var(--danger)">Error</span>`:`${r.apps.length} apps`;
     return`<div class="ri ${r.enabled?'':'disabled'}"><div class="rav" style="background:${hue(r.name)}">${init}</div><div class="rinfo"><div class="rname">${esc(r.name)}</div><div class="rsub">${sub}</div></div><div class="toggle ${r.enabled?'on':''}" data-tog="${r.id}"></div></div>`;
   }).join('')||'<div style="color:var(--text3);font-size:12px;text-align:center">No repos</div>';
-  el.querySelectorAll('[data-tog]').forEach(t=>t.addEventListener('click',e=>{
+  // イベント委譲で1個のリスナーだけ貼る
+  el.onclick=e=>{
+    const tog=e.target.closest('[data-tog]');if(!tog)return;
     e.stopPropagation();
-    const repo=repos.find(r=>r.id===t.dataset.tog);if(!repo)return;
+    const repo=repos.find(r=>r.id===tog.dataset.tog);if(!repo)return;
     repo.enabled=!repo.enabled;
     if(repo.enabled&&!repo.apps.length) fetchRepo(repo).then(rebuild); else rebuild();
     renderRepos();
-  }));
+  };
 }
 
 function renderCats(){
   const cats=new Set(allApps.flatMap(a=>a.cats||[]).filter(Boolean));
   const el=document.getElementById('catFilter');
   el.innerHTML=`<span class="tag ${activeCat==='all'?'active':''}" data-c="all">All</span>`+[...cats].sort().map(c=>`<span class="tag ${activeCat===c?'active':''}" data-c="${esc(c)}">${esc(c)}</span>`).join('');
-  el.querySelectorAll('.tag').forEach(t=>t.addEventListener('click',()=>{activeCat=t.dataset.c;renderCats();applyFilter();}));
+  // イベント委譲
+  el.onclick=e=>{
+    const t=e.target.closest('.tag');if(!t)return;
+    activeCat=t.dataset.c;renderCats();scheduleFilter();
+  };
 }
 
 function renderApps(){
   const grid=document.getElementById('appGrid');
   document.getElementById('appCount').textContent=`${filtered.length} app${filtered.length!==1?'s':''}`;
   if(!filtered.length){grid.innerHTML=`<div class="ebox"><div class="eico">📭</div>No apps found</div>`;return;}
-  grid.innerHTML=filtered.map((a,i)=>{
-    const ico=a.icon?`<img src="${esc(a.icon)}" alt="" onerror="this.parentNode.textContent='${a.emoji||'📦'}';">`:(a.emoji||'📦');
+  // DocumentFragmentで一括DOM構築
+  const frag=document.createDocumentFragment();
+  filtered.forEach((a,i)=>{
+    const div=document.createElement('div');
+    div.className='card';
+    div.dataset.aid=a.id;
+    // アニメーション遅延は最初の20件のみ（大量時にアニメが重い）
+    if(i<20) div.style.animationDelay=Math.min(i*20,300)+'ms';
+    const ico=a.icon?`<img src="${esc(a.icon)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${a.emoji||'📦'}';">`:(a.emoji||'📦');
     const tags=(a.cats||[]).slice(0,2).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
-    // グリッド・リスト共通のカード構造（スマホでは横並びにCSSで制御）
-    return`<div class="card" data-aid="${esc(a.id)}" style="animation-delay:${Math.min(i*25,280)}ms">
-      <div class="srcbadge">${esc(a.repo)}</div>
-      <div class="ctop">
-        <div class="aico">${ico}</div>
-        <div class="ameta">
-          <div class="aname">${esc(a.name)}</div>
-          <div class="adev">${esc(a.dev)}</div>
-          <span class="aver">v${esc(a.ver)}</span>
-        </div>
-      </div>
+    div.innerHTML=`<div class="srcbadge">${esc(a.repo)}</div>
+      <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div>
       <div class="adesc">${esc(a.desc||'No description')}</div>
-      <div class="cbot">
-        <div class="atags">${tags}</div>
-        <div class="cbtnrow">
-          <button class="btn-install" data-aid="${esc(a.id)}">Install</button>
-          <button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-  grid.querySelectorAll('.card').forEach(card=>{
-    card.addEventListener('click',e=>{
-      if(e.target.closest('.btn-install')||e.target.closest('.btn-dl')) return;
-      const app=filtered.find(a=>a.id===card.dataset.aid);if(app) openModal(app);
-    });
+      <div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>`;
+    frag.appendChild(div);
   });
-  grid.querySelectorAll('.btn-install').forEach(b=>b.addEventListener('click',e=>{
-    e.stopPropagation();
-    const app=filtered.find(a=>a.id===b.dataset.aid);if(app) openModal(app,true);
-  }));
-  grid.querySelectorAll('.btn-dl').forEach(b=>b.addEventListener('click',e=>{
-    e.stopPropagation();
-    const url=b.dataset.dl;
-    if(!url||url==='#'){toast('No download URL available',true);return;}
-    window.open(url,'_blank');toast('Download started!');
-  }));
+  grid.innerHTML='';
+  grid.appendChild(frag);
+  // イベント委譲で全カードに1個のリスナー
+  grid.onclick=e=>{
+    const btn_i=e.target.closest('.btn-install');
+    const btn_d=e.target.closest('.btn-dl');
+    const card=e.target.closest('.card');
+    if(btn_i){
+      e.stopPropagation();
+      const app=appMap[btn_i.dataset.aid];if(app) openModal(app,true);return;
+    }
+    if(btn_d){
+      e.stopPropagation();
+      const url=btn_d.dataset.dl;
+      if(!url||url==='#'){toast('No download URL available',true);return;}
+      window.open(url,'_blank');toast('Download started!');return;
+    }
+    if(card){
+      const app=appMap[card.dataset.aid];if(app) openModal(app);
+    }
+  };
 }
 
 function openModal(app,showPicker=false){
@@ -770,9 +795,9 @@ document.getElementById('refreshBtn').addEventListener('click',async()=>{
 });
 let st;
 document.getElementById('searchInput').addEventListener('input',e=>{
-  clearTimeout(st);st=setTimeout(()=>{query=e.target.value.trim();applyFilter();},180);
+  clearTimeout(st);st=setTimeout(()=>{query=e.target.value.trim();scheduleFilter();},180);
 });
-document.getElementById('sortSel').addEventListener('change',e=>{sort=e.target.value;applyFilter();});
+document.getElementById('sortSel').addEventListener('change',e=>{sort=e.target.value;scheduleFilter();});
 
 
 document.addEventListener('keydown',e=>{
