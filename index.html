@@ -977,13 +977,15 @@ document.addEventListener('keydown',e=>{
     const dst = document.getElementById('catSheetBody');
     const src = document.getElementById('catFilter');
     dst.innerHTML = '<div class="tagrow">' + src.innerHTML + '</div>';
-    dst.querySelectorAll('.tag').forEach(t=>{
-      t.addEventListener('click',()=>{
-        activeCat=t.dataset.c;
-        renderCats();applyFilter();
-        closeSheet();setNavActive('spNavApps');
-      });
-    });
+    // イベント委譲で処理（__favs__含む全タグ対応）
+    dst.onclick=e=>{
+      const t=e.target.closest('.tag');if(!t)return;
+      activeCat=t.dataset.c;
+      // __favs__の場合はshowFavOnlyも連動
+      showFavOnly=(activeCat==='__favs__');
+      renderCats();scheduleFilter();
+      closeSheet();setNavActive('spNavApps');
+    };
     openSheet(catSheet,'spNavCat');
   });
 
