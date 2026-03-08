@@ -5,6 +5,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RepoHub — IPA Repository Viewer</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#6c63ff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RepoHub">
+<link rel="apple-touch-icon" href="./images/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700&display=swap" rel="stylesheet">
 <style>
@@ -433,46 +440,78 @@ async function fetchCategory(bundleId){
   return 'Unknown';
 }
 
-// バッチ取得（メイン）— 全bundleIdをまとめてWorkerに投げる
+// バッチ取得（チャンク対応）— 1000件ずつWorkerに投げる
+const BATCH_CHUNK = 800; // Workerの1000件制限を余裕持って下回る
 async function fetchCategoryBatch(ids){
   const targets=[...new Set(ids.filter(id=>id&&!id.startsWith('com.demo')&&catCache[id]===undefined))];
   if(!targets.length) return;
-  try{
-    const r=await fetch(`${CATEGORY_WORKER_URL}/batch`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({bundleIds:targets}),
-      signal:AbortSignal.timeout(20000),
-    });
-    const d=await r.json();
-    for(const [id,val] of Object.entries(d)){
-      catCache[id]=val.category||'Unknown';
+
+  // 800件ずつ分割して順番に投げる
+  const chunks=[];
+  for(let i=0;i<targets.length;i+=BATCH_CHUNK) chunks.push(targets.slice(i,i+BATCH_CHUNK));
+
+  for(const chunk of chunks){
+    try{
+      const r=await fetch(`${CATEGORY_WORKER_URL}/batch`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({bundleIds:chunk}),
+        signal:AbortSignal.timeout(30000),
+      });
+      if(!r.ok){
+        const err=await r.text().catch(()=>'');
+        console.warn('Batch error',r.status,err);
+        for(const id of chunk) catCache[id]='Unknown';
+        continue;
+      }
+      const d=await r.json();
+      for(const [id,val] of Object.entries(d)){
+        catCache[id]=val.category||'Unknown';
+      }
+    }catch(e){
+      console.warn('Batch fetch failed:',e.message);
+      for(const id of chunk) catCache[id]='Unknown';
     }
-  }catch(e){
-    // バッチ失敗時はUnknownで埋める
-    for(const id of targets) catCache[id]='Unknown';
   }
 }
 
 async function enrichCategories(apps, onProgress){
-  // カテゴリ未設定のアプリだけ対象（デモは除く）
   const targets=apps.filter(a=>!(a.cats&&a.cats.length>0)&&a.bundle&&!a.bundle.startsWith('com.demo'));
   if(!targets.length){onProgress&&onProgress(0,0,null);return;}
 
   const total=targets.length;
   onProgress&&onProgress(0,total,'Fetching categories…');
 
-  // 全bundleIdをまとめてWorkerに投げる（1〜数回のAPIコールで済む）
+  // BATCH_CHUNKごとにWorkerに投げながらプログレスを更新
   const bundleIds=targets.map(a=>a.bundle);
-  await fetchCategoryBatch(bundleIds);
+  const unique=[...new Set(bundleIds.filter(id=>id&&!id.startsWith('com.demo')&&catCache[id]===undefined))];
+  const chunks=[];
+  for(let i=0;i<unique.length;i+=BATCH_CHUNK) chunks.push(unique.slice(i,i+BATCH_CHUNK));
+
+  let fetched=0;
+  for(const chunk of chunks){
+    try{
+      const r=await fetch(`${CATEGORY_WORKER_URL}/batch`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({bundleIds:chunk}),
+        signal:AbortSignal.timeout(30000),
+      });
+      if(r.ok){
+        const d=await r.json();
+        for(const [id,val] of Object.entries(d)) catCache[id]=val.category||'Unknown';
+      } else {
+        for(const id of chunk) catCache[id]='Unknown';
+      }
+    }catch(e){
+      for(const id of chunk) catCache[id]='Unknown';
+    }
+    fetched+=chunk.length;
+    onProgress&&onProgress(fetched,unique.length||1,`Categorizing… (${fetched}/${unique.length||total})`);
+  }
 
   // キャッシュから各アプリにセット
-  let done=0;
-  for(const a of targets){
-    a.cats=[catCache[a.bundle]||'Unknown'];
-    done++;
-    onProgress&&onProgress(done,total,a.name);
-  }
+  for(const a of targets) a.cats=[catCache[a.bundle]||'Unknown'];
   renderCats();renderApps();
 }
 
@@ -974,6 +1013,15 @@ function checkUrlApp(){
   const app=allApps.find(a=>a.bundle===bundle||a.id===bundle);
   if(app) openModal(app);
   else toast(`App "${bundle}" not found in loaded repos`,true);
+}
+
+// Service Worker 登録
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg=>console.log('SW registered, scope:',reg.scope))
+      .catch(err=>console.warn('SW registration failed:',err));
+  });
 }
 
 boot();
