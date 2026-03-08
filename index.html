@@ -203,6 +203,23 @@ animation:slideInLeft .25s ease;
 }
 }
 @keyframes slideInLeft{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+
+/* スマホ用カテゴリシート */
+.sp-cat-overlay{display:none;position:fixed;inset:0;z-index:160;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+.sp-cat-overlay.open{display:block}
+.sp-cat-sheet{
+position:fixed;bottom:0;left:0;right:0;z-index:161;
+background:var(–bg2);border-top:1px solid var(–border);
+border-radius:20px 20px 0 0;
+padding:12px 16px max(20px,env(safe-area-inset-bottom));
+max-height:75vh;overflow-y:auto;
+transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+}
+.sp-cat-sheet.open{transform:translateY(0)}
+.sp-cat-handle{width:36px;height:4px;border-radius:99px;background:var(–border);margin:0 auto 14px}
+.sp-cat-title{font-family:‘Space Mono’,monospace;font-size:11px;font-weight:700;color:var(–text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px}
+.sp-cat-body{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:8px}
+.sp-cat-body .tag{font-size:13px;padding:7px 14px}
 #loadScreen{position:fixed;inset:0;z-index:1000;background:var(–bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
 #loadScreen.done{opacity:0;visibility:hidden;pointer-events:none}
 .ls-logo{font-family:‘Space Mono’,monospace;font-size:22px;font-weight:700;color:var(–text);display:flex;align-items:center;gap:10px;margin-bottom:48px;animation:lsFadeIn .5s ease both}
@@ -289,6 +306,15 @@ animation:slideInLeft .25s ease;
 <!-- スマホ用サイドバーオーバーレイ -->
 
 <div class="sp-sidebar-overlay" id="spSidebarOverlay"></div>
+
+<!-- スマホ用カテゴリシート -->
+
+<div class="sp-cat-overlay" id="spCatOverlay"></div>
+<div class="sp-cat-sheet" id="spCatSheet">
+  <div class="sp-cat-handle"></div>
+  <div class="sp-cat-title">Category</div>
+  <div class="sp-cat-body" id="spCatBody"></div>
+</div>
 
 <!-- スマホ用ボトムナビ -->
 
@@ -556,8 +582,11 @@ function renderApps(){
   grid.innerHTML=filtered.map((a,i)=>{
     const ico=a.icon?`<img src="${esc(a.icon)}" alt="" onerror="this.parentNode.textContent='${a.emoji||'📦'}';">`:(a.emoji||'📦');
     const tags=(a.cats||[]).slice(0,2).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
-    const listAct=`<div class="list-actions"><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓</button></div>`;
-    return`<div class="card" data-aid="${esc(a.id)}" style="animation-delay:${Math.min(i*25,280)}ms"><div class="srcbadge">${esc(a.repo)}</div><div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div><div class="adesc">${esc(a.desc||'No description')}</div><div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>${isGrid?'':listAct}</div>`;
+    if(isGrid){
+      return`<div class="card" data-aid="${esc(a.id)}" style="animation-delay:${Math.min(i*25,280)}ms"><div class="srcbadge">${esc(a.repo)}</div><div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div><div class="adesc">${esc(a.desc||'No description')}</div><div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓</button></div></div></div>`;
+    } else {
+      return`<div class="card" data-aid="${esc(a.id)}" style="animation-delay:${Math.min(i*25,280)}ms"><div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div><div class="list-actions"><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓</button></div></div>`;
+    }
   }).join('');
   grid.querySelectorAll('.card').forEach(card=>{
     card.addEventListener('click',e=>{
@@ -704,7 +733,38 @@ document.addEventListener('keydown',e=>{
   function closeSidebar(){sidebar.classList.remove('sp-open');spOverlay.classList.remove('open');}
   function setNavActive(id){document.querySelectorAll('.sp-nb').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');}
   document.getElementById('spNavApps').addEventListener('click',()=>{closeSidebar();setNavActive('spNavApps');window.scrollTo({top:0,behavior:'smooth'});});
-  document.getElementById('spNavFilter').addEventListener('click',()=>{closeSidebar();setNavActive('spNavFilter');document.getElementById('searchInput').focus();window.scrollTo({top:0,behavior:'smooth'});});
+  // Filterタブ → カテゴリシートを開く
+  const catOverlay = document.getElementById('spCatOverlay');
+  const catSheet = document.getElementById('spCatSheet');
+  function openCatSheet(){
+    // spCatBodyにカテゴリタグをコピー
+    const src = document.getElementById('catFilter');
+    const dst = document.getElementById('spCatBody');
+    dst.innerHTML = src.innerHTML;
+    dst.querySelectorAll('.tag').forEach(t => {
+      t.addEventListener('click', () => {
+        activeCat = t.dataset.c;
+        renderCats();
+        applyFilter();
+        closeCatSheet();
+        setNavActive('spNavApps');
+        // PC側のタグも同期
+      });
+    });
+    catOverlay.classList.add('open');
+    catSheet.classList.add('open');
+    setNavActive('spNavFilter');
+  }
+  function closeCatSheet(){
+    catOverlay.classList.remove('open');
+    catSheet.classList.remove('open');
+  }
+  document.getElementById('spNavFilter').addEventListener('click',()=>{
+    closeSidebar();
+    if(catSheet.classList.contains('open')){closeCatSheet();setNavActive('spNavApps');}
+    else openCatSheet();
+  });
+  catOverlay.addEventListener('click', closeCatSheet);
   document.getElementById('spNavRepos').addEventListener('click',()=>{
     if(sidebar.classList.contains('sp-open')){closeSidebar();setNavActive('spNavApps');}
     else{sidebar.classList.add('sp-open');spOverlay.classList.add('open');setNavActive('spNavRepos');}
