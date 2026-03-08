@@ -502,6 +502,7 @@ async function boot(){
 
   // Phase 2: rebuild and collect all apps
   allApps=repos.filter(r=>r.enabled).flatMap(r=>r.apps);
+  appMap={};allApps.forEach(a=>appMap[a.id]=a);
   applyFilter();renderCats();renderRepos();
 
   // Phase 3: iTunes API category lookup (50% → 95%)
@@ -783,6 +784,7 @@ document.getElementById('refreshBtn').addEventListener('click',async()=>{
 
   // Phase 2: rebuild
   allApps=repos.filter(r=>r.enabled).flatMap(r=>r.apps);
+  appMap={};allApps.forEach(a=>appMap[a.id]=a);
   applyFilter();renderCats();renderRepos();
 
   // Phase 3: iTunes (50→95%)
