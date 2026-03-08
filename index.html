@@ -79,14 +79,13 @@
   .btn-install:hover{opacity:.85;transform:scale(1.05)}
   .btn-dl{background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:99px;padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;white-space:nowrap}
   .btn-dl:hover{border-color:var(--accent);color:var(--accent)}
-  .grid.list .card{padding:12px 16px}
-  .grid.list .adesc,.grid.list .cbot{display:none}
-  .grid.list .ctop{margin-bottom:0;align-items:center}
+  .grid.list .card{padding:12px 16px;display:flex;flex-wrap:wrap;gap:0}
+  .grid.list .adesc{display:none}
+  .grid.list .ctop{margin-bottom:0;align-items:center;flex:1;min-width:0}
   .grid.list .aico{width:42px;height:42px;border-radius:10px;font-size:20px}
   .grid.list .srcbadge{display:none}
-  .grid.list .card{display:flex;align-items:center}
-  .grid.list .ctop{flex:1}
-  .list-actions{margin-left:12px;flex-shrink:0;display:flex;gap:6px}
+  .grid.list .cbot{margin-left:10px;flex-shrink:0;flex-wrap:nowrap}
+  .grid.list .atags{display:none}
   .lbox{text-align:center;padding:64px 20px;color:var(--text3)}
   .spin{width:30px;height:30px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
   @keyframes spin{to{transform:rotate(360deg)}}
@@ -134,92 +133,109 @@
   /* ── スクロールバー ── */
   ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 
-/* ── モバイル共通 ── */
+/* ── PC: sp-only非表示 ── */
+.sp-only{display:none!important}
+@media(max-width:768px){.sp-only{display:flex!important}}
+
+/* ── モバイル ── */
 @media(max-width:768px){
-header{padding:0 14px}
-.hi{height:54px;gap:10px}
-.logo{font-size:15px}
+header{padding:0 12px}
+.hi{height:52px;gap:8px}
+.logo{font-size:14px}
 .hsearch{max-width:none;flex:1}
 .hact{gap:4px}
-.bico{width:32px;height:32px;font-size:13px}
-.main{grid-template-columns:1fr;padding:12px;gap:12px}
-.sidebar{position:static;display:none}
-.sidebar.sp-open{display:flex}
+.bico{width:34px;height:34px;font-size:13px}
+/* PCのtheme/refresh非表示（ボトムナビで代替） */
+#themeBtn,#refreshBtn{display:none}
+.main{grid-template-columns:1fr;padding:10px;gap:10px}
+.sidebar{display:none}
 .ca{min-width:0}
-.cbar{margin-bottom:12px}
-.grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
-.grid.list{grid-template-columns:1fr;gap:6px}
-.card{padding:13px}
-.aico{width:44px;height:44px;border-radius:11px;font-size:22px}
+.cbar{margin-bottom:10px}
+/* カード1列 */
+.grid{grid-template-columns:1fr;gap:8px}
+.grid.list{gap:6px}
+/* カードは横並び（アイコン＋メタ＋ボタン） */
+.card{padding:12px 14px;display:flex;align-items:center;gap:12px}
+.card::after{display:none}
+.card:hover{transform:none}
+.srcbadge{display:none}
+.ctop{margin-bottom:0;flex:1;min-width:0;gap:10px;align-items:center}
+.aico{width:46px;height:46px;border-radius:11px;font-size:22px;flex-shrink:0}
+.ameta{flex:1;min-width:0}
 .aname{font-size:13px}
 .adev{font-size:11px}
-.adesc{font-size:11px;-webkit-line-clamp:2}
-.btn-install{font-size:11px;padding:4px 10px}
-.btn-dl{font-size:11px;padding:4px 8px}
-.modal{padding:18px;border-radius:16px;max-height:92vh}
-.mhead{gap:12px;margin-bottom:14px}
-.mico{width:56px;height:56px;border-radius:14px;font-size:28px}
+.aver{font-size:10px}
+/* descとカテゴリタグは非表示（カードタップでモーダル） */
+.adesc,.atags,.cbot{display:none}
+/* ボタン列 */
+.cbtnrow{flex-shrink:0;display:flex;flex-direction:column;gap:4px}
+.btn-install{font-size:11px;padding:5px 11px;white-space:nowrap}
+.btn-dl{font-size:11px;padding:5px 9px;white-space:nowrap}
+/* リスト表示はグリッドと同じ扱い */
+.grid.list .card{display:flex;align-items:center;gap:12px}
+.grid.list .ctop{flex:1}
+.grid.list .aico{width:40px;height:40px}
+/* モーダル */
+.modal{border-radius:20px 20px 0 0;max-height:92vh;padding:20px 18px}
+.overlay{align-items:flex-end;padding:0}
+.mhead{gap:12px}
+.mico{width:54px;height:54px}
 .mtitle{font-size:17px}
-.mgrid{grid-template-columns:1fr 1fr;gap:6px}
+.mgrid{grid-template-columns:1fr 1fr}
 .mactions{flex-direction:column;gap:8px}
-.btn-modal-install,.btn-modal-dl{padding:11px}
-.toasts{bottom:70px;right:12px;left:12px}
+/* ボトムナビ分のpadding */
+#appShell{padding-bottom:68px}
+.toasts{bottom:76px;right:12px;left:12px}
 .toast{max-width:none}
-/* ボトムナビ */
-.sp-nav{display:flex}
 }
 
-/* ── スマホ用ボトムナビ ── */
+/* ── ボトムシート共通 ── */
+.sheet-overlay{display:none;position:fixed;inset:0;z-index:160;background:rgba(0,0,0,.55);backdrop-filter:blur(4px)}
+.sheet-overlay.open{display:block}
+.bottom-sheet{
+position:fixed;bottom:0;left:0;right:0;z-index:161;
+background:var(–bg2);border-top:1px solid var(–border);
+border-radius:20px 20px 0 0;
+padding:10px 16px max(24px,env(safe-area-inset-bottom));
+max-height:80vh;overflow-y:auto;
+transform:translateY(100%);
+transition:transform .3s cubic-bezier(.4,0,.2,1);
+display:none;
+}
+.bottom-sheet.open{transform:translateY(0);display:block}
+.sheet-handle{width:36px;height:4px;border-radius:99px;background:var(–border);margin:0 auto 14px}
+.sheet-title{font-family:‘Space Mono’,monospace;font-size:11px;font-weight:700;color:var(–text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px}
+.sheet-body{padding-bottom:8px}
+
+/* カテゴリシートのタグ */
+.sheet-body .tagrow{gap:8px}
+.sheet-body .tag{font-size:13px;padding:8px 16px}
+
+/* 設定シート */
+.setting-row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(–border);cursor:pointer}
+.setting-row:last-of-type{border-bottom:none}
+.setting-ico{font-size:18px;width:24px;text-align:center;flex-shrink:0}
+.setting-label{flex:1;font-size:15px;color:var(–text)}
+.setting-arrow{font-size:20px;color:var(–text3)}
+.setting-section-title{font-size:11px;font-weight:700;color:var(–text3);text-transform:uppercase;letter-spacing:.1em;font-family:‘Space Mono’,monospace;margin:16px 0 8px}
+.sheet-sort-wrap{margin-bottom:4px}
+/* 設定内リポジトリリスト */
+#spRepoList .ri{padding:10px 4px}
+
+/* ── ボトムナビ ── */
 .sp-nav{
 display:none;
 position:fixed;bottom:0;left:0;right:0;z-index:150;
 background:var(–bg2);border-top:1px solid var(–border);
 backdrop-filter:blur(20px);
-padding:8px 0 max(8px,env(safe-area-inset-bottom));
+padding:6px 0 max(6px,env(safe-area-inset-bottom));
 }
-.sp-nav-inner{display:flex;justify-content:space-around;align-items:center}
-.sp-nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;color:var(–text3);cursor:pointer;padding:4px 0;font-size:10px;font-family:‘DM Sans’,sans-serif;transition:color .15s}
+@media(max-width:768px){.sp-nav{display:block}}
+.sp-nav-inner{display:flex;justify-content:space-around}
+.sp-nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:transparent;color:var(–text3);cursor:pointer;padding:4px 0;font-size:10px;font-family:‘DM Sans’,sans-serif;transition:color .15s;-webkit-tap-highlight-color:transparent}
 .sp-nb.active{color:var(–accent)}
-.sp-nb-ico{font-size:20px;line-height:1}
-/* スマホ時のメインエリアに下padding */
-@media(max-width:768px){
-#appShell{padding-bottom:70px}
-.overlay{padding:12px;align-items:flex-end}
-.modal{border-radius:20px 20px 12px 12px;max-height:90vh}
-}
-
-/* ── スマホ用サイドバーオーバーレイ ── */
-.sp-sidebar-overlay{
-display:none;position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
-}
-@media(max-width:768px){
-.sp-sidebar-overlay.open{display:block}
-.sidebar.sp-open{
-display:flex;position:fixed;left:0;top:0;bottom:0;z-index:145;
-width:min(300px,88vw);overflow-y:auto;
-background:var(–bg);border-right:1px solid var(–border);
-padding:60px 14px 80px;
-animation:slideInLeft .25s ease;
-}
-}
+.sp-nb-ico{font-size:21px;line-height:1}
 @keyframes slideInLeft{from{transform:translateX(-100%)}to{transform:translateX(0)}}
-
-/* スマホ用カテゴリシート */
-.sp-cat-overlay{display:none;position:fixed;inset:0;z-index:160;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
-.sp-cat-overlay.open{display:block}
-.sp-cat-sheet{
-position:fixed;bottom:0;left:0;right:0;z-index:161;
-background:var(–bg2);border-top:1px solid var(–border);
-border-radius:20px 20px 0 0;
-padding:12px 16px max(20px,env(safe-area-inset-bottom));
-max-height:75vh;overflow-y:auto;
-transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
-}
-.sp-cat-sheet.open{transform:translateY(0)}
-.sp-cat-handle{width:36px;height:4px;border-radius:99px;background:var(–border);margin:0 auto 14px}
-.sp-cat-title{font-family:‘Space Mono’,monospace;font-size:11px;font-weight:700;color:var(–text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px}
-.sp-cat-body{display:flex;flex-wrap:wrap;gap:8px;padding-bottom:8px}
-.sp-cat-body .tag{font-size:13px;padding:7px 14px}
 #loadScreen{position:fixed;inset:0;z-index:1000;background:var(–bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
 #loadScreen.done{opacity:0;visibility:hidden;pointer-events:none}
 .ls-logo{font-family:‘Space Mono’,monospace;font-size:22px;font-weight:700;color:var(–text);display:flex;align-items:center;gap:10px;margin-bottom:48px;animation:lsFadeIn .5s ease both}
@@ -258,6 +274,7 @@ transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
       <input type="text" id="searchInput" placeholder="Search… (⌘K)" autocomplete="off">
     </div>
     <div class="hact">
+      <button class="bico sp-only" id="menuBtn" title="Menu">☰</button>
       <button class="bico" id="themeBtn" title="Toggle theme">🌙</button>
       <button class="bico" id="refreshBtn" title="Refresh all">🔄</button>
     </div>
@@ -303,17 +320,47 @@ transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
 <div class="overlay" id="overlay"><div class="modal" id="modalBody"></div></div>
 <div class="toasts" id="toasts"></div>
 
-<!-- スマホ用サイドバーオーバーレイ -->
+<!-- シート系オーバーレイ（共通） -->
 
-<div class="sp-sidebar-overlay" id="spSidebarOverlay"></div>
+<div class="sheet-overlay" id="sheetOverlay"></div>
 
-<!-- スマホ用カテゴリシート -->
+<!-- カテゴリシート -->
 
-<div class="sp-cat-overlay" id="spCatOverlay"></div>
-<div class="sp-cat-sheet" id="spCatSheet">
-  <div class="sp-cat-handle"></div>
-  <div class="sp-cat-title">Category</div>
-  <div class="sp-cat-body" id="spCatBody"></div>
+<div class="bottom-sheet" id="catSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Category</div>
+  <div class="sheet-body" id="catSheetBody"></div>
+</div>
+
+<!-- 設定シート -->
+
+<div class="bottom-sheet" id="settingsSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Settings</div>
+  <div class="sheet-body">
+    <div class="setting-row" id="settingTheme">
+      <span class="setting-ico">🌙</span>
+      <span class="setting-label">Dark Mode</span>
+      <div class="toggle on" id="settingThemeToggle"></div>
+    </div>
+    <div class="setting-row" id="settingRefresh">
+      <span class="setting-ico">🔄</span>
+      <span class="setting-label">Refresh Repos</span>
+      <span class="setting-arrow">›</span>
+    </div>
+    <div class="setting-section-title">Sort</div>
+    <div class="sheet-sort-wrap">
+      <select class="fsel" id="spSortSel">
+        <option value="name-asc">Name A → Z</option>
+        <option value="name-desc">Name Z → A</option>
+        <option value="ver">Newest version</option>
+        <option value="size-desc">Size (large first)</option>
+        <option value="size-asc">Size (small first)</option>
+      </select>
+    </div>
+    <div class="setting-section-title">Repositories</div>
+    <div id="spRepoList"></div>
+  </div>
 </div>
 
 <!-- スマホ用ボトムナビ -->
@@ -323,14 +370,14 @@ transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
     <button class="sp-nb active" id="spNavApps">
       <span class="sp-nb-ico">📱</span>Apps
     </button>
-    <button class="sp-nb" id="spNavFilter">
-      <span class="sp-nb-ico">🔍</span>Filter
+    <button class="sp-nb" id="spNavCat">
+      <span class="sp-nb-ico">🏷️</span>Category
     </button>
-    <button class="sp-nb" id="spNavRepos">
-      <span class="sp-nb-ico">📦</span>Repos
+    <button class="sp-nb" id="spNavSearch">
+      <span class="sp-nb-ico">🔍</span>Search
     </button>
-    <button class="sp-nb" id="spNavTheme">
-      <span class="sp-nb-ico" id="spThemeIco">🌙</span>Theme
+    <button class="sp-nb" id="spNavSettings">
+      <span class="sp-nb-ico">⚙️</span>Settings
     </button>
   </div>
 </nav>
@@ -582,11 +629,26 @@ function renderApps(){
   grid.innerHTML=filtered.map((a,i)=>{
     const ico=a.icon?`<img src="${esc(a.icon)}" alt="" onerror="this.parentNode.textContent='${a.emoji||'📦'}';">`:(a.emoji||'📦');
     const tags=(a.cats||[]).slice(0,2).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
-    if(isGrid){
-      return`<div class="card" data-aid="${esc(a.id)}" style="animation-delay:${Math.min(i*25,280)}ms"><div class="srcbadge">${esc(a.repo)}</div><div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div><div class="adesc">${esc(a.desc||'No description')}</div><div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓</button></div></div></div>`;
-    } else {
-      return`<div class="card" data-aid="${esc(a.id)}" style="animation-delay:${Math.min(i*25,280)}ms"><div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div><div class="list-actions"><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓</button></div></div>`;
-    }
+    // グリッド・リスト共通のカード構造（スマホでは横並びにCSSで制御）
+    return`<div class="card" data-aid="${esc(a.id)}" style="animation-delay:${Math.min(i*25,280)}ms">
+      <div class="srcbadge">${esc(a.repo)}</div>
+      <div class="ctop">
+        <div class="aico">${ico}</div>
+        <div class="ameta">
+          <div class="aname">${esc(a.name)}</div>
+          <div class="adev">${esc(a.dev)}</div>
+          <span class="aver">v${esc(a.ver)}</span>
+        </div>
+      </div>
+      <div class="adesc">${esc(a.desc||'No description')}</div>
+      <div class="cbot">
+        <div class="atags">${tags}</div>
+        <div class="cbtnrow">
+          <button class="btn-install" data-aid="${esc(a.id)}">Install</button>
+          <button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button>
+        </div>
+      </div>
+    </div>`;
   }).join('');
   grid.querySelectorAll('.card').forEach(card=>{
     card.addEventListener('click',e=>{
@@ -726,57 +788,116 @@ document.addEventListener('keydown',e=>{
   if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();document.getElementById('searchInput').focus();}
 });
 
-// スマホ用ボトムナビ制御
+// ── スマホ UI 制御 ──────────────────────────────────────────────
 (function(){
-  const sidebar=document.querySelector('.sidebar');
-  const spOverlay=document.getElementById('spSidebarOverlay');
-  function closeSidebar(){sidebar.classList.remove('sp-open');spOverlay.classList.remove('open');}
-  function setNavActive(id){document.querySelectorAll('.sp-nb').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');}
-  document.getElementById('spNavApps').addEventListener('click',()=>{closeSidebar();setNavActive('spNavApps');window.scrollTo({top:0,behavior:'smooth'});});
-  // Filterタブ → カテゴリシートを開く
-  const catOverlay = document.getElementById('spCatOverlay');
-  const catSheet = document.getElementById('spCatSheet');
-  function openCatSheet(){
-    // spCatBodyにカテゴリタグをコピー
+  const overlay = document.getElementById('sheetOverlay');
+  const catSheet = document.getElementById('catSheet');
+  const settingsSheet = document.getElementById('settingsSheet');
+  let currentSheet = null;
+
+  function openSheet(sheet, navId){
+    if(currentSheet && currentSheet !== sheet) closeSheet();
+    currentSheet = sheet;
+    overlay.classList.add('open');
+    sheet.classList.add('open');
+    setNavActive(navId);
+  }
+  function closeSheet(){
+    if(!currentSheet) return;
+    overlay.classList.remove('open');
+    currentSheet.classList.remove('open');
+    currentSheet = null;
+  }
+  function setNavActive(id){
+    document.querySelectorAll('.sp-nb').forEach(b=>b.classList.remove('active'));
+    if(id) document.getElementById(id).classList.add('active');
+  }
+
+  overlay.addEventListener('click', ()=>{closeSheet();setNavActive('spNavApps');});
+
+  // Apps
+  document.getElementById('spNavApps').addEventListener('click',()=>{
+    closeSheet();setNavActive('spNavApps');window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  // Category シート
+  document.getElementById('spNavCat').addEventListener('click',()=>{
+    if(currentSheet===catSheet){closeSheet();setNavActive('spNavApps');return;}
+    // カテゴリタグをコピー
+    const dst = document.getElementById('catSheetBody');
     const src = document.getElementById('catFilter');
-    const dst = document.getElementById('spCatBody');
-    dst.innerHTML = src.innerHTML;
-    dst.querySelectorAll('.tag').forEach(t => {
-      t.addEventListener('click', () => {
-        activeCat = t.dataset.c;
-        renderCats();
-        applyFilter();
-        closeCatSheet();
-        setNavActive('spNavApps');
-        // PC側のタグも同期
+    dst.innerHTML = '<div class="tagrow">' + src.innerHTML + '</div>';
+    dst.querySelectorAll('.tag').forEach(t=>{
+      t.addEventListener('click',()=>{
+        activeCat=t.dataset.c;
+        renderCats();applyFilter();
+        closeSheet();setNavActive('spNavApps');
       });
     });
-    catOverlay.classList.add('open');
-    catSheet.classList.add('open');
-    setNavActive('spNavFilter');
-  }
-  function closeCatSheet(){
-    catOverlay.classList.remove('open');
-    catSheet.classList.remove('open');
-  }
-  document.getElementById('spNavFilter').addEventListener('click',()=>{
-    closeSidebar();
-    if(catSheet.classList.contains('open')){closeCatSheet();setNavActive('spNavApps');}
-    else openCatSheet();
+    openSheet(catSheet,'spNavCat');
   });
-  catOverlay.addEventListener('click', closeCatSheet);
-  document.getElementById('spNavRepos').addEventListener('click',()=>{
-    if(sidebar.classList.contains('sp-open')){closeSidebar();setNavActive('spNavApps');}
-    else{sidebar.classList.add('sp-open');spOverlay.classList.add('open');setNavActive('spNavRepos');}
+
+  // Search
+  document.getElementById('spNavSearch').addEventListener('click',()=>{
+    closeSheet();setNavActive('spNavApps');
+    document.getElementById('searchInput').focus();
+    window.scrollTo({top:0,behavior:'smooth'});
   });
-  document.getElementById('spNavTheme').addEventListener('click',()=>{
+
+  // Settings シート
+  document.getElementById('spNavSettings').addEventListener('click',()=>{
+    if(currentSheet===settingsSheet){closeSheet();setNavActive('spNavApps');return;}
+    // レポリストをコピー
+    const el=document.getElementById('spRepoList');
+    el.innerHTML=repos.map(r=>{
+      const init=(r.name||'R')[0].toUpperCase();
+      const sub=r.status==='loading'?'Loading…':r.status==='err'?'Error':`${r.apps.length} apps`;
+      return`<div class="ri ${r.enabled?'':'disabled'}"><div class="rav" style="background:${hue(r.name)}">${init}</div><div class="rinfo"><div class="rname">${esc(r.name)}</div><div class="rsub">${sub}</div></div><div class="toggle ${r.enabled?'on':''}" data-tog="${r.id}"></div></div>`;
+    }).join('');
+    el.querySelectorAll('[data-tog]').forEach(t=>t.addEventListener('click',e=>{
+      e.stopPropagation();
+      const repo=repos.find(r=>r.id===t.dataset.tog);if(!repo)return;
+      repo.enabled=!repo.enabled;
+      if(repo.enabled&&!repo.apps.length) fetchRepo(repo).then(rebuild); else rebuild();
+      renderRepos();
+      // 設定シート内も更新
+      document.getElementById('spNavSettings').click();
+      setTimeout(()=>document.getElementById('spNavSettings').click(),10);
+    }));
+    // ソート同期
+    document.getElementById('spSortSel').value=sort;
+    // テーマトグル同期
+    const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+    document.getElementById('settingThemeToggle').classList.toggle('on',isDark);
+    openSheet(settingsSheet,'spNavSettings');
+  });
+
+  // 設定内：テーマ
+  document.getElementById('settingTheme').addEventListener('click',()=>{
     document.getElementById('themeBtn').click();
     setTimeout(()=>{
       const isDark=document.documentElement.getAttribute('data-theme')==='dark';
-      document.getElementById('spThemeIco').textContent=isDark?'🌙':'☀️';
+      document.getElementById('settingThemeToggle').classList.toggle('on',isDark);
     },10);
   });
-  spOverlay.addEventListener('click',()=>{closeSidebar();setNavActive('spNavApps');});
+
+  // 設定内：リフレッシュ
+  document.getElementById('settingRefresh').addEventListener('click',()=>{
+    closeSheet();setNavActive('spNavApps');
+    document.getElementById('refreshBtn').click();
+  });
+
+  // 設定内：ソート
+  document.getElementById('spSortSel').addEventListener('change',e=>{
+    sort=e.target.value;
+    document.getElementById('sortSel').value=sort;
+    applyFilter();
+  });
+
+  // ハンバーガーボタン（スマホヘッダー）→ 設定シート
+  document.getElementById('menuBtn').addEventListener('click',()=>{
+    document.getElementById('spNavSettings').click();
+  });
 })();
 
 boot();
