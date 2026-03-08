@@ -50,6 +50,13 @@
   .tag:hover{border-color:var(--accent)}
   .tag.active{background:var(--accent);color:#fff}
   .ca{min-width:0}
+  .cat-badge{background:var(--bg);color:var(--text3);border-radius:99px;padding:1px 6px;font-size:9px;font-weight:700;margin-left:3px;font-family:'Space Mono',monospace}
+  .tag.active .cat-badge{background:rgba(255,255,255,.2);color:#fff}
+  .aupdated{font-size:10px;color:var(--text3);margin:2px 0 6px;font-family:'Space Mono',monospace}
+  .btn-copy{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:99px;padding:5px 10px;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+  .btn-copy:hover{border-color:var(--accent);color:var(--accent)}
+  .share-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .share-url{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:8px 11px;font-size:11px;color:var(--text2);font-family:'Space Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
   .ccount{font-family:'Space Mono',monospace;font-size:12px;color:var(--text3)}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
@@ -147,6 +154,13 @@ header{padding:0 12px}
 .main{grid-template-columns:1fr;padding:10px;gap:10px}
 .sidebar{display:none}
 .ca{min-width:0}
+.cat-badge{background:var(–bg);color:var(–text3);border-radius:99px;padding:1px 6px;font-size:9px;font-weight:700;margin-left:3px;font-family:‘Space Mono’,monospace}
+.tag.active .cat-badge{background:rgba(255,255,255,.2);color:#fff}
+.aupdated{font-size:10px;color:var(–text3);margin:2px 0 6px;font-family:‘Space Mono’,monospace}
+.btn-copy{background:transparent;color:var(–text3);border:1px solid var(–border);border-radius:99px;padding:5px 10px;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-copy:hover{border-color:var(–accent);color:var(–accent)}
+.share-row{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.share-url{flex:1;background:var(–bg3);border:1px solid var(–border);border-radius:var(–rs);padding:8px 11px;font-size:11px;color:var(–text2);font-family:‘Space Mono’,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cbar{margin-bottom:10px}
 /* カード1列 */
 .grid{grid-template-columns:1fr;gap:8px}
@@ -473,6 +487,7 @@ function finishLoading() {
   setTimeout(() => {
     document.getElementById('loadScreen').classList.add('done');
     document.getElementById('appShell').classList.add('visible');
+    checkUrlApp();
   }, 500);
 }
 
@@ -534,6 +549,9 @@ async function fetchRepo(repo){
       const json=JSON.parse(text);
       if(json.name) repo.name=json.name;
       repo.apps=parseAltStore(json,repo);
+      // 最新アプリの更新日をrepoの更新日として使う
+      const dates=repo.apps.map(a=>a.updatedAt).filter(Boolean).sort().reverse();
+      repo.lastUpdated=dates[0]||null;
     }catch{
       repo.apps=parsePlist(text,repo);
     }
@@ -549,7 +567,7 @@ async function fetchRepo(repo){
 function parseAltStore(json,repo){
   return(json.apps||[]).map(a=>{
     const v=a.versions?.[0];
-    const obj={id:`${repo.id}_${a.bundleIdentifier||Math.random()}`,name:a.name||'?',dev:a.developerName||json.name||repo.name,desc:a.localizedDescription||a.subtitle||'',ver:v?.version||a.version||'?',size:v?.size||a.size||0,dl:v?.downloadURL||a.downloadURL||'#',icon:a.iconURL||null,cats:a.category?[a.category]:(a.categories||[]),minOS:a.minimumOSVersion||null,bundle:a.bundleIdentifier||'',changelog:v?.localizedDescription||'',repo:repo.name,repoId:repo.id};
+    const obj={id:`${repo.id}_${a.bundleIdentifier||Math.random()}`,name:a.name||'?',dev:a.developerName||json.name||repo.name,desc:a.localizedDescription||a.subtitle||'',updatedAt:v?.date||a.versionDate||null,ver:v?.version||a.version||'?',size:v?.size||a.size||0,dl:v?.downloadURL||a.downloadURL||'#',icon:a.iconURL||null,cats:a.category?[a.category]:(a.categories||[]),minOS:a.minimumOSVersion||null,bundle:a.bundleIdentifier||'',changelog:v?.localizedDescription||'',repo:repo.name,repoId:repo.id};
     obj._ql=(obj.name+' '+obj.dev+' '+obj.desc).toLowerCase();
     return obj;
   });
@@ -561,7 +579,7 @@ function parsePlist(text,repo){
   doc.querySelectorAll('dict').forEach(d=>{
     const obj={};
     d.querySelectorAll(':scope > key').forEach(k=>{obj[k.textContent]=k.nextElementSibling?.textContent||'';});
-    if(obj.name||obj.CFBundleIdentifier){const n=obj.name||obj.CFBundleIdentifier||'?',dv=obj.developerName||repo.name,dc=obj.localizedDescription||'';apps.push({id:`${repo.id}_${obj.CFBundleIdentifier||Math.random()}`,name:n,dev:dv,desc:dc,ver:obj.version||'?',size:+obj.size||0,dl:obj.downloadURL||'#',icon:obj.iconURL||null,cats:obj.category?[obj.category]:[],minOS:obj.minimumOSVersion||null,bundle:obj.CFBundleIdentifier||'',changelog:'',repo:repo.name,repoId:repo.id,_ql:(n+' '+dv+' '+dc).toLowerCase()});}
+    if(obj.name||obj.CFBundleIdentifier){const n=obj.name||obj.CFBundleIdentifier||'?',dv=obj.developerName||repo.name,dc=obj.localizedDescription||'';apps.push({id:`${repo.id}_${obj.CFBundleIdentifier||Math.random()}`,name:n,dev:dv,desc:dc,ver:obj.version||'?',size:+obj.size||0,dl:obj.downloadURL||'#',icon:obj.iconURL||null,cats:obj.category?[obj.category]:[],minOS:obj.minimumOSVersion||null,bundle:obj.CFBundleIdentifier||'',changelog:'',repo:repo.name,repoId:repo.id,updatedAt:obj.versionDate||null,_ql:(n+' '+dv+' '+dc).toLowerCase()});}
   });
   return apps.length?apps:demoApps(repo);
 }
@@ -624,7 +642,8 @@ function renderRepos(){
   const el=document.getElementById('repoList');
   el.innerHTML=repos.map(r=>{
     const init=(r.name||'R')[0].toUpperCase();
-    const sub=r.status==='loading'?`<span style="color:var(--warning)">Loading…</span>`:r.status==='err'?`<span style="color:var(--danger)">Error</span>`:`${r.apps.length} apps`;
+    const updStr=r.lastUpdated?` · <span style="color:var(--text3);font-size:10px">${fmtDate(r.lastUpdated)}</span>`:'';
+    const sub=r.status==='loading'?`<span style="color:var(--warning)">Loading…</span>`:r.status==='err'?`<span style="color:var(--danger)">Error</span>`:`${r.apps.length} apps${updStr}`;
     return`<div class="ri ${r.enabled?'':'disabled'}"><div class="rav" style="background:${hue(r.name)}">${init}</div><div class="rinfo"><div class="rname">${esc(r.name)}</div><div class="rsub">${sub}</div></div><div class="toggle ${r.enabled?'on':''}" data-tog="${r.id}"></div></div>`;
   }).join('')||'<div style="color:var(--text3);font-size:12px;text-align:center">No repos</div>';
   // イベント委譲で1個のリスナーだけ貼る
@@ -639,10 +658,12 @@ function renderRepos(){
 }
 
 function renderCats(){
-  const cats=new Set(allApps.flatMap(a=>a.cats||[]).filter(Boolean));
+  const catCount={};
+  allApps.forEach(a=>(a.cats||[]).forEach(c=>{catCount[c]=(catCount[c]||0)+1;}));
+  const cats=Object.keys(catCount).sort();
   const el=document.getElementById('catFilter');
-  el.innerHTML=`<span class="tag ${activeCat==='all'?'active':''}" data-c="all">All</span>`+[...cats].sort().map(c=>`<span class="tag ${activeCat===c?'active':''}" data-c="${esc(c)}">${esc(c)}</span>`).join('');
-  // イベント委譲
+  el.innerHTML=`<span class="tag ${activeCat==='all'?'active':''}" data-c="all">All <span class="cat-badge">${allApps.length}</span></span>`
+    +cats.map(c=>`<span class="tag ${activeCat===c?'active':''}" data-c="${esc(c)}">${esc(c)} <span class="cat-badge">${catCount[c]}</span></span>`).join('');
   el.onclick=e=>{
     const t=e.target.closest('.tag');if(!t)return;
     activeCat=t.dataset.c;renderCats();scheduleFilter();
@@ -665,6 +686,7 @@ function renderApps(){
     const tags=(a.cats||[]).slice(0,2).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
     div.innerHTML=`<div class="srcbadge">${esc(a.repo)}</div>
       <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div>
+      ${a.updatedAt?`<div class="aupdated">${fmtDate(a.updatedAt)}</div>`:''}
       <div class="adesc">${esc(a.desc||'No description')}</div>
       <div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>`;
     frag.appendChild(div);
@@ -692,10 +714,15 @@ function renderApps(){
   };
 }
 
+const COPY_SVG=`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>`;
+const SHARE_SVG=`<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
+
 function openModal(app,showPicker=false){
   const ico=app.icon?`<img src="${esc(app.icon)}" alt="" onerror="this.parentNode.textContent='${app.emoji||'📦'}';">`:(app.emoji||'📦');
   const cats=(app.cats||[]).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
   const pickerHTML=buildPicker(app.dl);
+  const shareUrl=`${location.origin}${location.pathname}?app=${encodeURIComponent(app.bundle||app.id)}`;
+  const hasDl=app.dl&&app.dl!=='#';
   document.getElementById('modalBody').innerHTML=`
     <div class="mhead">
       <div class="mico">${ico}</div>
@@ -713,14 +740,22 @@ function openModal(app,showPicker=false){
       <div class="mbox"><div class="mlbl">Min iOS</div><div class="mval">${esc(app.minOS||'N/A')}</div></div>
       <div class="mbox"><div class="mlbl">Bundle ID</div><div class="mval" style="font-size:10px">${esc(app.bundle||'N/A')}</div></div>
       <div class="mbox"><div class="mlbl">Source</div><div class="mval" style="font-size:11px">${esc(app.repo)}</div></div>
+      ${app.updatedAt?`<div class="mbox"><div class="mlbl">Updated</div><div class="mval" style="font-size:11px">${fmtDate(app.updatedAt)}</div></div>`:''}
     </div>
     ${app.changelog?`<div class="changelog"><div class="clbl">Changelog</div>${esc(app.changelog)}</div>`:''}
+    <div class="share-row">
+      <div class="share-url" title="${esc(shareUrl)}">${esc(shareUrl)}</div>
+      <button class="btn-copy" id="mShare">${SHARE_SVG} Share</button>
+      ${hasDl?`<button class="btn-copy" id="mCopyUrl">${COPY_SVG} Copy URL</button>`:''}
+    </div>
     <div class="mactions">
       <button class="btn-modal-install" id="mInstTog"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg> Install via…</button>
       <button class="btn-modal-dl" id="mDl"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download IPA</button>
     </div>
     <div id="picker" style="display:${showPicker?'block':'none'}">${pickerHTML}</div>
   `;
+  // URLシェア：?app=bundle を履歴に積む
+  history.replaceState(null,'',`?app=${encodeURIComponent(app.bundle||app.id)}`);
   document.getElementById('overlay').classList.add('open');
   document.getElementById('mClose').onclick=closeModal;
   document.getElementById('mInstTog').onclick=()=>{
@@ -728,8 +763,14 @@ function openModal(app,showPicker=false){
     p.style.display=p.style.display==='none'?'block':'none';
   };
   document.getElementById('mDl').onclick=()=>{
-    if(!app.dl||app.dl==='#'){toast('No download URL',true);return;}
+    if(!hasDl){toast('No download URL',true);return;}
     window.open(app.dl,'_blank');toast('Download started!');
+  };
+  document.getElementById('mShare').onclick=()=>{
+    navigator.clipboard.writeText(shareUrl).then(()=>toast('Share link copied!')).catch(()=>toast('Copy failed',true));
+  };
+  if(hasDl) document.getElementById('mCopyUrl').onclick=()=>{
+    navigator.clipboard.writeText(app.dl).then(()=>toast('IPA URL copied!')).catch(()=>toast('Copy failed',true));
   };
 }
 
@@ -748,7 +789,7 @@ function buildPicker(dlUrl){
   return`<div class="ipicker"><div class="iptitle">Choose installer</div><div class="ilist">${items}</div><div class="inote">Tap to open the installer app on your device. The installer must already be installed. If nothing opens, use Download to get the IPA file directly.</div></div>`;
 }
 
-function closeModal(){document.getElementById('overlay').classList.remove('open');}
+function closeModal(){document.getElementById('overlay').classList.remove('open');history.replaceState(null,'',location.pathname);}
 document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
 
 function toast(msg,isErr=false){
@@ -761,6 +802,7 @@ function toast(msg,isErr=false){
 
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
+function fmtDate(s){if(!s)return'';try{const d=new Date(s);if(isNaN(d))return'';const now=new Date();const diff=Math.floor((now-d)/86400000);if(diff===0)return'Today';if(diff===1)return'Yesterday';if(diff<30)return`${diff}d ago`;if(diff<365)return`${Math.floor(diff/30)}mo ago`;return`${Math.floor(diff/365)}y ago`;}catch{return'';}}
 function fmtSize(b){return b>=1048576?`${(b/1048576).toFixed(1)} MB`:`${(b/1024).toFixed(0)} KB`;}
 function hue(s){let h=0;for(let i=0;i<(s||'').length;i++)h=s.charCodeAt(i)+((h<<5)-h);const hv=Math.abs(h)%360;return`linear-gradient(135deg,hsl(${hv},60%,32%),hsl(${(hv+55)%360},60%,26%))`;}
 
@@ -922,6 +964,17 @@ document.addEventListener('keydown',e=>{
     document.getElementById('spNavSettings').click();
   });
 })();
+
+// ?app=bundle でモーダルを自動オープン
+function checkUrlApp(){
+  const p=new URLSearchParams(location.search);
+  const bundle=p.get('app');
+  if(!bundle) return;
+  // bundleIdかidで探す
+  const app=allApps.find(a=>a.bundle===bundle||a.id===bundle);
+  if(app) openModal(app);
+  else toast(`App "${bundle}" not found in loaded repos`,true);
+}
 
 boot();
 </script>
