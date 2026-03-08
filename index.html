@@ -21,14 +21,14 @@
   .hsearch input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:99px;padding:8px 16px 8px 38px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
   .hsearch input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,.15)}
   .hsearch input::placeholder{color:var(--text3)}
-  .sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
+  .sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;display:flex;align-items:center}
   .hact{display:flex;gap:6px}
-  .bico{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s}
+  .bico{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
   .bico:hover{border-color:var(--accent);color:var(--accent)}
   .main{max-width:1200px;margin:0 auto;padding:24px;display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start}
   .sidebar{position:sticky;top:86px;display:flex;flex-direction:column;gap:14px}
   .sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px}
-  .stitle{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
+  .stitle{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:6px}
   .ri{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);margin-bottom:4px;transition:background .15s}
   .ri:last-child{margin-bottom:0}
   .ri:hover{background:var(--bg3)}
@@ -87,7 +87,7 @@
   .spin{width:30px;height:30px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
   @keyframes spin{to{transform:rotate(360deg)}}
   .ebox{text-align:center;padding:64px 20px;color:var(--text3);font-size:14px}
-  .eico{font-size:38px;margin-bottom:10px}
+  .eico{margin-bottom:10px;display:flex;justify-content:center;color:var(--text3)}
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
   .overlay.open{opacity:1;pointer-events:all}
   .modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;padding:28px;transform:scale(.96) translateY(8px);transition:transform .2s}
@@ -212,7 +212,7 @@ display:none;
 /* 設定シート */
 .setting-row{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(–border);cursor:pointer}
 .setting-row:last-of-type{border-bottom:none}
-.setting-ico{font-size:18px;width:24px;text-align:center;flex-shrink:0}
+.setting-ico{width:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .setting-label{flex:1;font-size:15px;color:var(–text)}
 .setting-arrow{font-size:20px;color:var(–text3)}
 .setting-section-title{font-size:11px;font-weight:700;color:var(–text3);text-transform:uppercase;letter-spacing:.1em;font-family:‘Space Mono’,monospace;margin:16px 0 8px}
@@ -232,7 +232,7 @@ padding:6px 0 max(6px,env(safe-area-inset-bottom));
 .sp-nav-inner{display:flex;justify-content:space-around}
 .sp-nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;border:none;background:transparent;color:var(–text3);cursor:pointer;padding:4px 0;font-size:10px;font-family:‘DM Sans’,sans-serif;transition:color .15s;-webkit-tap-highlight-color:transparent}
 .sp-nb.active{color:var(–accent)}
-.sp-nb-ico{font-size:21px;line-height:1}
+.sp-nb-ico{width:22px;height:22px;display:flex;align-items:center;justify-content:center}
 @keyframes slideInLeft{from{transform:translateX(-100%)}to{transform:translateX(0)}}
 #loadScreen{position:fixed;inset:0;z-index:9999;background:var(–bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
 #loadScreen.done{opacity:0;visibility:hidden;pointer-events:none}
@@ -268,13 +268,13 @@ padding:6px 0 max(6px,env(safe-area-inset-bottom));
   <div class="hi">
     <div class="logo"><div class="ldot"></div>RepoHub</div>
     <div class="hsearch">
-      <span class="sico">🔍</span>
+      <span class="sico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <input type="text" id="searchInput" placeholder="Search… (⌘K)" autocomplete="off">
     </div>
     <div class="hact">
-      <button class="bico sp-only" id="menuBtn" title="Menu">☰</button>
-      <button class="bico" id="themeBtn" title="Toggle theme">🌙</button>
-      <button class="bico" id="refreshBtn" title="Refresh all">🔄</button>
+      <button class="bico sp-only" id="menuBtn" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <button class="bico" id="themeBtn" title="Toggle theme"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+      <button class="bico" id="refreshBtn" title="Refresh all"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
     </div>
   </div>
 </header>
@@ -282,11 +282,11 @@ padding:6px 0 max(6px,env(safe-area-inset-bottom));
 <div class="main">
   <aside class="sidebar">
     <div class="sc">
-      <div class="stitle">📦 Repositories</div>
+      <div class="stitle"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Repositories</div>
       <div id="repoList"></div>
     </div>
     <div class="sc">
-      <div class="stitle">⚙️ Sort &amp; Filter</div>
+      <div class="stitle"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Sort &amp; Filter</div>
       <div class="flbl">Sort by</div>
       <select class="fsel" id="sortSel">
         <option value="name-asc">Name A → Z</option>
@@ -337,12 +337,12 @@ padding:6px 0 max(6px,env(safe-area-inset-bottom));
   <div class="sheet-title">Settings</div>
   <div class="sheet-body">
     <div class="setting-row" id="settingTheme">
-      <span class="setting-ico">🌙</span>
+      <span class="setting-ico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
       <span class="setting-label">Dark Mode</span>
       <div class="toggle on" id="settingThemeToggle"></div>
     </div>
     <div class="setting-row" id="settingRefresh">
-      <span class="setting-ico">🔄</span>
+      <span class="setting-ico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span>
       <span class="setting-label">Refresh Repos</span>
       <span class="setting-arrow">›</span>
     </div>
@@ -366,16 +366,16 @@ padding:6px 0 max(6px,env(safe-area-inset-bottom));
 <nav class="sp-nav">
   <div class="sp-nav-inner">
     <button class="sp-nb active" id="spNavApps">
-      <span class="sp-nb-ico">📱</span>Apps
+      <span class="sp-nb-ico"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>Apps
     </button>
     <button class="sp-nb" id="spNavCat">
-      <span class="sp-nb-ico">🏷️</span>Category
+      <span class="sp-nb-ico"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></span>Category
     </button>
     <button class="sp-nb" id="spNavSearch">
-      <span class="sp-nb-ico">🔍</span>Search
+      <span class="sp-nb-ico"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Search
     </button>
     <button class="sp-nb" id="spNavSettings">
-      <span class="sp-nb-ico">⚙️</span>Settings
+      <span class="sp-nb-ico"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings
     </button>
   </div>
 </nav>
@@ -652,7 +652,7 @@ function renderCats(){
 function renderApps(){
   const grid=document.getElementById('appGrid');
   document.getElementById('appCount').textContent=`${filtered.length} app${filtered.length!==1?'s':''}`;
-  if(!filtered.length){grid.innerHTML=`<div class="ebox"><div class="eico">📭</div>No apps found</div>`;return;}
+  if(!filtered.length){grid.innerHTML=`<div class="ebox"><div class="eico"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>No apps found</div>`;return;}
   // DocumentFragmentで一括DOM構築
   const frag=document.createDocumentFragment();
   filtered.forEach((a,i)=>{
@@ -705,7 +705,7 @@ function openModal(app,showPicker=false){
         <span class="mver">v${esc(app.ver)}</span>
         <div class="mcats">${cats}</div>
       </div>
-      <button class="mclose" id="mClose">✕</button>
+      <button class="mclose" id="mClose"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <p class="mdesc">${esc(app.desc||'No description')}</p>
     <div class="mgrid">
@@ -716,8 +716,8 @@ function openModal(app,showPicker=false){
     </div>
     ${app.changelog?`<div class="changelog"><div class="clbl">Changelog</div>${esc(app.changelog)}</div>`:''}
     <div class="mactions">
-      <button class="btn-modal-install" id="mInstTog">📲 Install via…</button>
-      <button class="btn-modal-dl" id="mDl">⬇ Download IPA</button>
+      <button class="btn-modal-install" id="mInstTog"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg> Install via…</button>
+      <button class="btn-modal-dl" id="mDl"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download IPA</button>
     </div>
     <div id="picker" style="display:${showPicker?'block':'none'}">${pickerHTML}</div>
   `;
@@ -743,7 +743,7 @@ function buildPicker(dlUrl){
           style="width:100%;height:100%;object-fit:cover;border-radius:6px">
       </div>
       <div><div class="iname">${esc(ins.name)}</div></div>
-      <span class="iopen">Open →</span>
+      <span class="iopen"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
     </a>`).join('');
   return`<div class="ipicker"><div class="iptitle">Choose installer</div><div class="ilist">${items}</div><div class="inote">Tap to open the installer app on your device. The installer must already be installed. If nothing opens, use Download to get the IPA file directly.</div></div>`;
 }
@@ -766,7 +766,7 @@ function hue(s){let h=0;for(let i=0;i<(s||'').length;i++)h=s.charCodeAt(i)+((h<<
 
 document.getElementById('themeBtn').addEventListener('click',function(){
   const d=document.documentElement,dark=d.dataset.theme==='dark';
-  d.dataset.theme=dark?'light':'dark';this.textContent=dark?'☀️':'🌙';
+  d.dataset.theme=dark?'light':'dark';this.innerHTML=dark?'<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>':'<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 });
 document.getElementById('refreshBtn').addEventListener('click',async()=>{
   document.getElementById('appShell').classList.remove('visible');
