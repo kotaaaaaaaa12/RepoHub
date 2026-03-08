@@ -1,581 +1,171 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RepoHub — IPA Repository Viewer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700&display=swap" rel="stylesheet">
-<style>
-  :root{--bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a24;--border:#2a2a3a;--accent:#6c63ff;--accent2:#ff6584;--text:#e8e8f0;--text2:#8888a8;--text3:#555570;--card:#13131e;--card-hover:#1c1c2c;--success:#4ade80;--danger:#f87171;--warning:#fbbf24;--shadow:0 4px 24px rgba(108,99,255,.1);--r:14px;--rs:8px;--tag-bg:rgba(108,99,255,.12);--tag-color:#a5a0ff}
-  [data-theme="light"]{--bg:#f2f2f8;--bg2:#e8e8f4;--bg3:#dcdcec;--border:#c8c8de;--accent:#5a52e0;--accent2:#e04070;--text:#1a1a2e;--text2:#44446a;--text3:#8888a0;--card:#fff;--card-hover:#f5f5ff;--shadow:0 4px 24px rgba(0,0,0,.08);--tag-bg:rgba(90,82,224,.1);--tag-color:#5a52e0}
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
-  header{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);backdrop-filter:blur(20px);padding:0 24px}
-  .hi{max-width:1200px;margin:0 auto;height:62px;display:flex;align-items:center;gap:14px}
-  .logo{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;white-space:nowrap}
-  .ldot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:blink 2s infinite}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-  .hsearch{flex:1;max-width:340px;margin-left:auto;position:relative}
-  .hsearch input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:99px;padding:8px 16px 8px 38px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s}
-  .hsearch input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(108,99,255,.15)}
-  .hsearch input::placeholder{color:var(--text3)}
-  .sico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
-  .hact{display:flex;gap:6px}
-  .bico{width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .2s}
-  .bico:hover{border-color:var(--accent);color:var(--accent)}
-  .main{max-width:1200px;margin:0 auto;padding:24px;display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start}
-  .sidebar{position:sticky;top:86px;display:flex;flex-direction:column;gap:14px}
-  .sc{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px}
-  .stitle{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
-  .ri{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--rs);margin-bottom:4px;transition:background .15s}
-  .ri:last-child{margin-bottom:0}
-  .ri:hover{background:var(--bg3)}
-  .rav{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;font-family:'Space Mono',monospace;flex-shrink:0}
-  .rinfo{flex:1;min-width:0}
-  .rname{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .rsub{font-size:11px;color:var(--text3);margin-top:1px}
-  .toggle{width:34px;height:19px;border-radius:99px;background:var(--bg3);border:1px solid var(--border);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s,border-color .2s}
-  .toggle.on{background:var(--accent);border-color:var(--accent)}
-  .toggle::after{content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
-  .toggle.on::after{transform:translateX(15px)}
-  .ri.disabled .rname,.ri.disabled .rsub{opacity:.38}
-  .flbl{font-size:12px;color:var(--text3);margin-bottom:5px}
-  .fsel{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:8px 30px 8px 11px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;transition:border-color .2s}
-  .fsel:focus{border-color:var(--accent)}
-  .fgap{margin-top:10px}
-  .tagrow{display:flex;flex-wrap:wrap;gap:5px}
-  .tag{background:var(--tag-bg);color:var(--tag-color);border-radius:99px;padding:4px 10px;font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid transparent}
-  .tag:hover{border-color:var(--accent)}
-  .tag.active{background:var(--accent);color:#fff}
-  .ca{min-width:0}
-  .cbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-  .ccount{font-family:'Space Mono',monospace;font-size:12px;color:var(--text3)}
-  .vtog{display:flex;gap:3px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:3px}
-  .vbtn{padding:4px 10px;border-radius:6px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:13px;transition:all .15s}
-  .vbtn.active{background:var(--accent);color:#fff}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
-  .grid.list{grid-template-columns:1fr;gap:8px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:18px;cursor:pointer;transition:all .2s;animation:fadeUp .35s ease both;position:relative;overflow:hidden}
-  .card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:opacity .2s}
-  .card:hover{background:var(--card-hover);border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow)}
-  .card:hover::after{opacity:1}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-  .ctop{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
-  .aico{width:52px;height:52px;border-radius:13px;flex-shrink:0;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden}
-  .aico img{width:100%;height:100%;object-fit:cover}
-  .ameta{flex:1;min-width:0}
-  .aname{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
-  .adev{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .aver{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);background:var(--tag-bg);padding:2px 6px;border-radius:99px;margin-top:4px;display:inline-block}
-  .adesc{font-size:12px;color:var(--text2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:12px}
-  .cbot{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .atags{display:flex;gap:4px;flex-wrap:wrap;min-width:0}
-  .atag{background:var(--tag-bg);color:var(--tag-color);border-radius:99px;padding:2px 7px;font-size:10px;font-weight:500;white-space:nowrap}
-  .srcbadge{position:absolute;top:10px;right:10px;font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:99px;padding:1px 7px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .cbtnrow{display:flex;gap:6px;flex-shrink:0}
-  .btn-install{background:var(--accent);color:#fff;border:none;border-radius:99px;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap}
-  .btn-install:hover{opacity:.85;transform:scale(1.05)}
-  .btn-dl{background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:99px;padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;white-space:nowrap}
-  .btn-dl:hover{border-color:var(--accent);color:var(--accent)}
-  .grid.list .card{padding:12px 16px}
-  .grid.list .adesc,.grid.list .cbot{display:none}
-  .grid.list .ctop{margin-bottom:0;align-items:center}
-  .grid.list .aico{width:42px;height:42px;border-radius:10px;font-size:20px}
-  .grid.list .srcbadge{display:none}
-  .grid.list .card{display:flex;align-items:center}
-  .grid.list .ctop{flex:1}
-  .list-actions{margin-left:12px;flex-shrink:0;display:flex;gap:6px}
-  .lbox{text-align:center;padding:64px 20px;color:var(--text3)}
-  .spin{width:30px;height:30px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .ebox{text-align:center;padding:64px 20px;color:var(--text3);font-size:14px}
-  .eico{font-size:38px;margin-bottom:10px}
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
-  .overlay.open{opacity:1;pointer-events:all}
-  .modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px;width:100%;max-width:540px;max-height:88vh;overflow-y:auto;padding:28px;transform:scale(.96) translateY(8px);transition:transform .2s}
-  .overlay.open .modal{transform:scale(1) translateY(0)}
-  .mhead{display:flex;gap:16px;align-items:flex-start;margin-bottom:18px}
-  .mico{width:68px;height:68px;border-radius:17px;flex-shrink:0;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:34px;overflow:hidden}
-  .mico img{width:100%;height:100%;object-fit:cover}
-  .mtitle{font-size:20px;font-weight:700;color:var(--text)}
-  .mdev{font-size:13px;color:var(--text3);margin-top:2px}
-  .mver{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);background:var(--tag-bg);padding:2px 7px;border-radius:99px;margin-top:5px;display:inline-block}
-  .mcats{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
-  .mclose{margin-left:auto;flex-shrink:0;width:30px;height:30px;border-radius:50%;background:var(--bg3);border:1px solid var(--border);color:var(--text2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-  .mclose:hover{border-color:var(--danger);color:var(--danger)}
-  .mdesc{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:18px}
-  .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
-  .mbox{background:var(--bg3);border-radius:var(--rs);padding:11px}
-  .mlbl{font-size:10px;color:var(--text3);margin-bottom:3px}
-  .mval{font-size:13px;font-weight:600;color:var(--text);font-family:'Space Mono',monospace;word-break:break-all}
-  .changelog{font-size:12px;color:var(--text2);line-height:1.6;background:var(--bg3);border-radius:var(--rs);padding:12px;margin-bottom:20px}
-  .clbl{font-size:10px;color:var(--text3);margin-bottom:6px}
-  .mactions{display:flex;gap:10px;margin-bottom:14px}
-  .btn-modal-install{flex:1;background:var(--accent);color:#fff;border:none;border-radius:var(--rs);padding:13px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:7px}
-  .btn-modal-install:hover{opacity:.88}
-  .btn-modal-dl{flex:1;background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:var(--rs);padding:13px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px}
-  .btn-modal-dl:hover{border-color:var(--accent);color:var(--accent)}
-  .ipicker{background:var(--bg3);border-radius:var(--rs);padding:16px;border:1px solid var(--border)}
-  .iptitle{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;font-family:'Space Mono',monospace}
-  .ilist{display:flex;flex-direction:column;gap:6px}
-  .iitem{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--rs);background:var(--bg2);border:1px solid var(--border);cursor:pointer;transition:all .15s;text-decoration:none}
-  .iitem:hover{border-color:var(--accent);background:var(--card-hover)}
-  .iico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-  .iname{font-size:13px;font-weight:600;color:var(--text)}
-  .idesc{font-size:11px;color:var(--text3);margin-top:1px}
-  .iopen{margin-left:auto;font-size:11px;color:var(--accent);font-weight:600;white-space:nowrap}
-  .inote{font-size:11px;color:var(--text3);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);line-height:1.5}
-  .toasts{position:fixed;bottom:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:7px;pointer-events:none}
-  .toast{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;font-size:13px;color:var(--text);box-shadow:0 6px 24px rgba(0,0,0,.3);display:flex;align-items:center;gap:7px;animation:tIn .25s ease;max-width:260px}
-  .toast.ok{border-color:var(--success)}.toast.err{border-color:var(--danger)}
-  @keyframes tIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
-  @media(max-width:720px){.main{grid-template-columns:1fr;padding:14px}.sidebar{position:static}.grid{grid-template-columns:1fr}}
-  ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
-  #loadScreen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
-  #loadScreen.done{opacity:0;visibility:hidden;pointer-events:none}
-  .ls-logo{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px;margin-bottom:48px;animation:lsFadeIn .5s ease both}
-  .ls-ldot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:blink 2s infinite}
-  .ls-wrap{width:min(320px,80vw);animation:lsFadeIn .5s .1s ease both}
-  .ls-track{width:100%;height:4px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-bottom:16px;border:1px solid var(--border)}
-  .ls-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .35s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(108,99,255,.6)}
-  .ls-bot{display:flex;align-items:center;justify-content:space-between}
-  .ls-status{font-size:12px;color:var(--text3);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;transition:opacity .15s}
-  .ls-pct{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0}
-  @keyframes lsFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  #appShell{opacity:0;transition:opacity .5s ease}
-  #appShell.visible{opacity:1}
-</style>
-</head>
-<body>
+/**
 
-<div id="loadScreen">
-  <div class="ls-logo"><div class="ls-ldot"></div>RepoHub</div>
-  <div class="ls-wrap">
-    <div class="ls-track"><div class="ls-fill" id="lsFill"></div></div>
-    <div class="ls-bot">
-      <div class="ls-status" id="lsStatus">Initializing…</div>
-      <div class="ls-pct" id="lsPct">0%</div>
-    </div>
-  </div>
-</div>
+- RepoHub Category Worker v2
+- 
+- 改善点:
+- - iTunes API をバルク取得（最大200件/リクエスト）
+- - KV hit/miss を分離してまとめて処理
+- - Edge Cache 対応（Cache-Control: public, max-age=86400）
+- - bundleId の重複削除
+- - AppStore に存在しない IPA → “Unknown” カテゴリ
+    */
 
-<div id="appShell">
-<header>
-  <div class="hi">
-    <div class="logo"><div class="ldot"></div>RepoHub</div>
-    <div class="hsearch">
-      <span class="sico">🔍</span>
-      <input type="text" id="searchInput" placeholder="Search… (⌘K)" autocomplete="off">
-    </div>
-    <div class="hact">
-      <button class="bico" id="themeBtn" title="Toggle theme">🌙</button>
-      <button class="bico" id="refreshBtn" title="Refresh all">🔄</button>
-    </div>
-  </div>
-</header>
+const KV_TTL       = 60 * 60 * 24 * 30; // 30日
+const EDGE_TTL     = 86400;              // Edge Cache 1日
+const ITUNES_CHUNK = 200;               // iTunes API の最大 bundleId 数/回
+const FETCH_TIMEOUT = 8000;
 
-<div class="main">
-  <aside class="sidebar">
-    <div class="sc">
-      <div class="stitle">📦 Repositories</div>
-      <div id="repoList"></div>
-    </div>
-    <div class="sc">
-      <div class="stitle">⚙️ Sort &amp; Filter</div>
-      <div class="flbl">Sort by</div>
-      <select class="fsel" id="sortSel">
-        <option value="name-asc">Name A → Z</option>
-        <option value="name-desc">Name Z → A</option>
-        <option value="ver">Newest version</option>
-        <option value="size-desc">Size (large first)</option>
-        <option value="size-asc">Size (small first)</option>
-      </select>
-      <div class="fgap">
-        <div class="flbl">Category</div>
-        <div class="tagrow" id="catFilter"></div>
-      </div>
-    </div>
-  </aside>
-  <div class="ca">
-    <div class="cbar">
-      <div class="ccount" id="appCount">Loading…</div>
-      <div class="vtog">
-        <button class="vbtn active" id="gridBtn">⊞</button>
-        <button class="vbtn" id="listBtn">☰</button>
-      </div>
-    </div>
-    <div class="grid" id="appGrid">
-      <div class="lbox"><div class="spin"></div>Loading repositories…</div>
-    </div>
-  </div>
-</div>
+export default {
+async fetch(request, env, ctx) {
+if (request.method === ‘OPTIONS’) return corsResp(’’, 204);
 
-<div class="overlay" id="overlay"><div class="modal" id="modalBody"></div></div>
-<div class="toasts" id="toasts"></div>
-</div><!-- /appShell -->
+```
+const url = new URL(request.url);
 
-<script>
-const INSTALLERS=[
-  {id:'altstore',name:'AltStore',icon:'🟦',desc:'On-device via AltServer (PC required)',scheme:u=>`altstore://install?url=${encodeURIComponent(u)}`,bg:'#2c6cf7'},
-  {id:'altstore-classic',name:'AltStore Classic',icon:'🔵',desc:'Classic AltStore build',scheme:u=>`altstore-classic://install?url=${encodeURIComponent(u)}`,bg:'#1a56db'},
-  {id:'sidestore',name:'SideStore',icon:'🟣',desc:'Wireless sideloading, no PC after setup',scheme:u=>`sidestore://install?url=${encodeURIComponent(u)}`,bg:'#7c3aed'},
-  {id:'trollstore',name:'TrollStore',icon:'🧌',desc:'Permanent install — iOS 14–17.0 only',scheme:u=>`apple-magnifier://install?url=${encodeURIComponent(u)}`,bg:'#059669'},
-  {id:'feather',name:'Feather',icon:'🪶',desc:'Open-source on-device IPA installer',scheme:u=>`feather://install?url=${encodeURIComponent(u)}`,bg:'#0891b2'},
-  {id:'esign',name:'ESign',icon:'✍️',desc:'Sign with your own .p12 certificate',scheme:u=>`esign://install?url=${encodeURIComponent(u)}`,bg:'#d97706'},
-  {id:'ksign',name:'KSign',icon:'🔑',desc:'Open-source ESign alternative',scheme:u=>`ksign://install?url=${encodeURIComponent(u)}`,bg:'#b45309'},
-  {id:'scarlet',name:'Scarlet',icon:'🔴',desc:'Enterprise cert-based IPA installer',scheme:u=>`scarlet://install?url=${encodeURIComponent(u)}`,bg:'#dc2626'},
-  {id:'gbox',name:'GBox',icon:'📦',desc:'Free IPA installer with ADP certificate',scheme:u=>`gbox://install?url=${encodeURIComponent(u)}`,bg:'#7c3aed'},
-  {id:'livecontainer',name:'LiveContainer',icon:'📲',desc:'Run apps without installing (iOS 17+)',scheme:u=>`livecontainer://install?url=${encodeURIComponent(u)}`,bg:'#0f766e'},
-];
+// GET /category?bundleId=xxx
+if (url.pathname === '/category' && request.method === 'GET') {
+  const bundleId = url.searchParams.get('bundleId');
+  if (!bundleId) return corsResp(JSON.stringify({ error: 'bundleId required' }), 400);
 
-let repos=[],allApps=[],filtered=[];
-let activeCat='all',sort='name-asc',query='',isGrid=true;
+  const cacheKey = new Request(request.url, request);
+  const edgeCached = await caches.default.match(cacheKey);
+  if (edgeCached) return edgeCached;
 
-// Category Worker URL — デプロイ後にここを書き換えてな
-// 例: https://repohub-category-worker.YOUR_SUBDOMAIN.workers.dev
-const CATEGORY_WORKER_URL = 'https://repohub-category-worker.kotaaaaaaaa12.workers.dev';
-
-const catCache={};
-async function fetchCategory(bundleId){
-  if(!bundleId||bundleId.startsWith('com.demo')) return 'Unknown';
-  if(catCache[bundleId]!==undefined) return catCache[bundleId];
-  catCache[bundleId]=null;
-  try{
-    const r=await fetch(`${CATEGORY_WORKER_URL}/category?bundleId=${encodeURIComponent(bundleId)}`,{signal:AbortSignal.timeout(7000)});
-    const d=await r.json();
-    const cat=d.category||'Unknown';
-    catCache[bundleId]=cat;
-    return cat;
-  }catch{}
-  return 'Unknown';
+  const result = await getSingle(bundleId, env);
+  const resp   = corsResp(JSON.stringify(result), 200, EDGE_TTL);
+  ctx.waitUntil(caches.default.put(cacheKey, resp.clone()));
+  return resp;
 }
 
-async function enrichCategories(apps, onProgress){
-  // カテゴリ未設定のアプリだけ対象（デモは除く）
-  const targets=apps.filter(a=>!(a.cats&&a.cats.length>0)&&a.bundle&&!a.bundle.startsWith('com.demo'));
-  if(!targets.length){onProgress&&onProgress(0,0,null);return;}
-  const chunks=[];
-  for(let i=0;i<targets.length;i+=8) chunks.push(targets.slice(i,i+8));
-  let done=0;
-  for(const chunk of chunks){
-    await Promise.all(chunk.map(async a=>{
-      const cat=await fetchCategory(a.bundle);
-      // "Unknown"も含めて必ずセット（AppStoreにないアプリも分類される）
-      a.cats=[cat||'Unknown'];
-      done++;
-      onProgress&&onProgress(done,targets.length,a.name);
-    }));
-    renderCats();renderApps();
-  }
+// POST /batch  { bundleIds: [...] }
+if (url.pathname === '/batch' && request.method === 'POST') {
+  let body;
+  try { body = await request.json(); }
+  catch { return corsResp(JSON.stringify({ error: 'Invalid JSON' }), 400); }
+
+  const raw = body.bundleIds;
+  if (!Array.isArray(raw) || raw.length === 0)
+    return corsResp(JSON.stringify({ error: 'bundleIds[] required' }), 400);
+  if (raw.length > 1000)
+    return corsResp(JSON.stringify({ error: 'Max 1000 bundleIds' }), 400);
+
+  const result = await getBatch(raw, env, ctx);
+  return corsResp(JSON.stringify(result), 200, EDGE_TTL);
 }
 
-// ── LOADING SCREEN ───────────────────────────────────────────────
-function setProgress(pct, status) {
-  document.getElementById('lsFill').style.width = pct + '%';
-  document.getElementById('lsPct').textContent = Math.round(pct) + '%';
-  if (status !== undefined) document.getElementById('lsStatus').textContent = status;
+return corsResp(JSON.stringify({ error: 'Not found' }), 404);
+```
+
 }
-function finishLoading() {
-  setProgress(100, 'Done!');
-  setTimeout(() => {
-    document.getElementById('loadScreen').classList.add('done');
-    document.getElementById('appShell').classList.add('visible');
-  }, 500);
-}
+};
 
-async function boot(){
-  setProgress(5,'Loading repo list…');
-  try{
-    const r=await fetch('./repo.json');
-    if(!r.ok) throw new Error('repo.json not found');
-    const urls=await r.json();
-    repos=urls.map((url,i)=>({id:`r${i}`,url,name:url,enabled:true,apps:[],status:'pending',err:null}));
-  }catch(e){
-    repos=[{id:'demo',url:'DEMO',name:'Demo Repo',enabled:true,apps:[],status:'pending',err:null}];
-    toast('Failed to load repo.json — showing demo data',true);
-  }
-  setProgress(10,'Starting…');
-  renderRepos();
+// ── 単体取得 ─────────────────────────────────────────────────────
+async function getSingle(bundleId, env) {
+const kv = await env.CATEGORY_CACHE.get(`cat:${bundleId}`);
+if (kv !== null) return { bundleId, category: kv, source: ‘cache’ };
 
-  // Phase 1: fetch repos (10% → 50%)
-  const total=repos.length;
-  let done=0;
-  await Promise.all(repos.map(async repo=>{
-    setProgress(10+(done/total)*40,`Fetching ${repo.name}…`);
-    await fetchRepo(repo);
-    done++;
-    setProgress(10+(done/total)*40,done<total?`Fetched ${repo.name}`:'Repos loaded');
-  }));
-
-  // Phase 2: rebuild and collect all apps
-  allApps=repos.filter(r=>r.enabled).flatMap(r=>r.apps);
-  applyFilter();renderCats();renderRepos();
-
-  // Phase 3: iTunes API category lookup (50% → 95%)
-  const needCat=allApps.filter(a=>!(a.cats&&a.cats.length>0)&&a.bundle&&!a.bundle.startsWith('com.demo'));
-  if(needCat.length===0){
-    setProgress(95,'Categories done');
-  }
-  await enrichCategories(allApps,(done,total,name)=>{
-    if(total===0) return;
-    const pct=50+(done/total)*45;
-    setProgress(pct, name ? `Looking up "${name}"…` : 'Fetching categories…');
-  });
-
-  finishLoading();
+const map = await itunesBulkLookup([bundleId]);
+const cat = map[bundleId] ?? ‘Unknown’;
+await env.CATEGORY_CACHE.put(`cat:${bundleId}`, cat, { expirationTtl: KV_TTL });
+return { bundleId, category: cat, source: ‘itunes’ };
 }
 
-async function fetchRepo(repo){
-  if(!repo.enabled) return;
-  repo.status='loading';renderRepos();
-  if(repo.url==='DEMO'||repo.url.includes('example.com')){
-    await delay(500);repo.apps=demoApps(repo);repo.status='ok';renderRepos();return;
-  }
-  try{
-    const res = await fetch(repo.url,{signal:AbortSignal.timeout(12000)});
-    if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text=await res.text();
-    try{
-      const json=JSON.parse(text);
-      if(json.name) repo.name=json.name;
-      repo.apps=parseAltStore(json,repo);
-    }catch{
-      repo.apps=parsePlist(text,repo);
-    }
-    repo.status='ok';
-  }catch(e){
-    repo.err=e.message;repo.status='err';
-    repo.apps=demoApps(repo);
-    toast(`${repo.name}: fetch failed (${e.message})`,true);
-  }
-  renderRepos();
+// ── バッチ取得 ────────────────────────────────────────────────────
+async function getBatch(rawIds, env, ctx) {
+// 1. 重複削除
+const ids = […new Set(rawIds.filter(Boolean))];
+
+// 2. KV を並列チェック
+const kvResults = await Promise.all(
+ids.map(id => env.CATEGORY_CACHE.get(`cat:${id}`).then(v => ({ id, v })))
+);
+
+const hitMap  = {};
+const missIds = [];
+for (const { id, v } of kvResults) {
+if (v !== null) hitMap[id] = v;
+else missIds.push(id);
 }
 
-function parseAltStore(json,repo){
-  return(json.apps||[]).map(a=>{
-    const v=a.versions?.[0];
-    return{id:`${repo.id}_${a.bundleIdentifier||Math.random()}`,name:a.name||'?',dev:a.developerName||json.name||repo.name,desc:a.localizedDescription||a.subtitle||'',ver:v?.version||a.version||'?',size:v?.size||a.size||0,dl:v?.downloadURL||a.downloadURL||'#',icon:a.iconURL||null,cats:a.category?[a.category]:(a.categories||[]),minOS:a.minimumOSVersion||null,bundle:a.bundleIdentifier||'',changelog:v?.localizedDescription||'',repo:repo.name,repoId:repo.id};
-  });
+// 3. miss だけ iTunes バルク lookup（200件ずつ）
+const freshMap = {};
+if (missIds.length > 0) {
+const chunks = chunkArray(missIds, ITUNES_CHUNK);
+const results = await Promise.all(chunks.map(itunesBulkLookup));
+for (const m of results) Object.assign(freshMap, m);
+
+```
+// iTunes にも存在しなかったものは Unknown
+for (const id of missIds) {
+  if (!(id in freshMap)) freshMap[id] = 'Unknown';
 }
 
-function parsePlist(text,repo){
-  const doc=new DOMParser().parseFromString(text,'text/xml');
-  const apps=[];
-  doc.querySelectorAll('dict').forEach(d=>{
-    const obj={};
-    d.querySelectorAll(':scope > key').forEach(k=>{obj[k.textContent]=k.nextElementSibling?.textContent||'';});
-    if(obj.name||obj.CFBundleIdentifier) apps.push({id:`${repo.id}_${obj.CFBundleIdentifier||Math.random()}`,name:obj.name||obj.CFBundleIdentifier||'?',dev:obj.developerName||repo.name,desc:obj.localizedDescription||'',ver:obj.version||'?',size:+obj.size||0,dl:obj.downloadURL||'#',icon:obj.iconURL||null,cats:obj.category?[obj.category]:[],minOS:obj.minimumOSVersion||null,bundle:obj.CFBundleIdentifier||'',changelog:'',repo:repo.name,repoId:repo.id});
-  });
-  return apps.length?apps:demoApps(repo);
+// 4. KV に非同期保存
+ctx.waitUntil(
+  Promise.all(
+    Object.entries(freshMap).map(([id, cat]) =>
+      env.CATEGORY_CACHE.put(`cat:${id}`, cat, { expirationTtl: KV_TTL })
+    )
+  )
+);
+```
+
 }
 
-const DN=['TweakX','Filza Pro','iSH Shell','NewTerm 3','Orion Browser','Pastel','Infuse','GoodLinks','A-Zippr','Lungo'];
-const DD=['Fern','TheMaster','ish-app','FreeBSD','Cultured Code','Shiny Frog','Firecore','Ngoc Doan','Zehran','Pilotmoon'];
-const DE=['🎮','📱','🎵','📷','🌐','⚡','🔧','🎨','📚','🛡️'];
-const DC=['Tweaks','Utilities','Games','Themes','Development'];
-const DB=['com.fern.tweakx','com.filza.free','app.ish','me.freeryder05.newterm','org.crystalmath.orion','me.pasteapp.paste','firecore.infuse7','com.ngoc.goodlinks','com.zehran.azippr','net.tobiasoleary.lungo'];
-function demoApps(repo){
-  return Array.from({length:5+(repo.id.charCodeAt(1)||0)%4},(_,i)=>({
-    id:`${repo.id}_d${i}`,name:DN[i%DN.length],dev:DD[i%DD.length],
-    desc:'Demo data. Add real repo URLs to repo.json to see actual apps.',
-    ver:`${1+i%3}.${i%9}.0`,size:(10+i*15)*1024*1024,dl:'#',icon:null,
-    emoji:DE[i%DE.length],cats:[DC[i%DC.length]],minOS:`${14+i%3}.0`,
-    bundle:DB[i%DB.length],changelog:'',repo:repo.name,repoId:repo.id,isDemo:true
-  }));
+// 5. マージして返す
+const result = {};
+for (const id of ids) {
+result[id] = {
+category: hitMap[id] ?? freshMap[id] ?? ‘Unknown’,
+source:   id in hitMap ? ‘cache’ : ‘itunes’,
+};
+}
+return result;
 }
 
-function rebuild(){
-  allApps=repos.filter(r=>r.enabled).flatMap(r=>r.apps);
-  applyFilter();renderCats();renderRepos();
-}
-
-function applyFilter(){
-  let a=[...allApps];
-  if(query){const q=query.toLowerCase();a=a.filter(x=>x.name.toLowerCase().includes(q)||x.dev.toLowerCase().includes(q)||x.desc.toLowerCase().includes(q));}
-  if(activeCat!=='all') a=a.filter(x=>x.cats?.includes(activeCat));
-  switch(sort){
-    case 'name-asc': a.sort((x,y)=>x.name.localeCompare(y.name));break;
-    case 'name-desc':a.sort((x,y)=>y.name.localeCompare(x.name));break;
-    case 'ver':      a.sort((x,y)=>y.ver.localeCompare(x.ver));break;
-    case 'size-desc':a.sort((x,y)=>y.size-x.size);break;
-    case 'size-asc': a.sort((x,y)=>x.size-y.size);break;
-  }
-  filtered=a;renderApps();
-}
-
-function renderRepos(){
-  const el=document.getElementById('repoList');
-  el.innerHTML=repos.map(r=>{
-    const init=(r.name||'R')[0].toUpperCase();
-    const sub=r.status==='loading'?`<span style="color:var(--warning)">Loading…</span>`:r.status==='err'?`<span style="color:var(--danger)">Error</span>`:`${r.apps.length} apps`;
-    return`<div class="ri ${r.enabled?'':'disabled'}"><div class="rav" style="background:${hue(r.name)}">${init}</div><div class="rinfo"><div class="rname">${esc(r.name)}</div><div class="rsub">${sub}</div></div><div class="toggle ${r.enabled?'on':''}" data-tog="${r.id}"></div></div>`;
-  }).join('')||'<div style="color:var(--text3);font-size:12px;text-align:center">No repos</div>';
-  el.querySelectorAll('[data-tog]').forEach(t=>t.addEventListener('click',e=>{
-    e.stopPropagation();
-    const repo=repos.find(r=>r.id===t.dataset.tog);if(!repo)return;
-    repo.enabled=!repo.enabled;
-    if(repo.enabled&&!repo.apps.length) fetchRepo(repo).then(rebuild); else rebuild();
-    renderRepos();
-  }));
-}
-
-function renderCats(){
-  const cats=new Set(allApps.flatMap(a=>a.cats||[]).filter(Boolean));
-  const el=document.getElementById('catFilter');
-  el.innerHTML=`<span class="tag ${activeCat==='all'?'active':''}" data-c="all">All</span>`+[...cats].sort().map(c=>`<span class="tag ${activeCat===c?'active':''}" data-c="${esc(c)}">${esc(c)}</span>`).join('');
-  el.querySelectorAll('.tag').forEach(t=>t.addEventListener('click',()=>{activeCat=t.dataset.c;renderCats();applyFilter();}));
-}
-
-function renderApps(){
-  const grid=document.getElementById('appGrid');
-  document.getElementById('appCount').textContent=`${filtered.length} app${filtered.length!==1?'s':''}`;
-  if(!filtered.length){grid.innerHTML=`<div class="ebox"><div class="eico">📭</div>No apps found</div>`;return;}
-  grid.innerHTML=filtered.map((a,i)=>{
-    const ico=a.icon?`<img src="${esc(a.icon)}" alt="" onerror="this.parentNode.textContent='${a.emoji||'📦'}';">`:(a.emoji||'📦');
-    const tags=(a.cats||[]).slice(0,2).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
-    const listAct=`<div class="list-actions"><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓</button></div>`;
-    return`<div class="card" data-aid="${esc(a.id)}" style="animation-delay:${Math.min(i*25,280)}ms"><div class="srcbadge">${esc(a.repo)}</div><div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div><div class="adesc">${esc(a.desc||'No description')}</div><div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>${isGrid?'':listAct}</div>`;
-  }).join('');
-  grid.querySelectorAll('.card').forEach(card=>{
-    card.addEventListener('click',e=>{
-      if(e.target.closest('.btn-install')||e.target.closest('.btn-dl')) return;
-      const app=filtered.find(a=>a.id===card.dataset.aid);if(app) openModal(app);
-    });
-  });
-  grid.querySelectorAll('.btn-install').forEach(b=>b.addEventListener('click',e=>{
-    e.stopPropagation();
-    const app=filtered.find(a=>a.id===b.dataset.aid);if(app) openModal(app,true);
-  }));
-  grid.querySelectorAll('.btn-dl').forEach(b=>b.addEventListener('click',e=>{
-    e.stopPropagation();
-    const url=b.dataset.dl;
-    if(!url||url==='#'){toast('No download URL available',true);return;}
-    window.open(url,'_blank');toast('Download started!');
-  }));
-}
-
-function openModal(app,showPicker=false){
-  const ico=app.icon?`<img src="${esc(app.icon)}" alt="" onerror="this.parentNode.textContent='${app.emoji||'📦'}';">`:(app.emoji||'📦');
-  const cats=(app.cats||[]).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
-  const pickerHTML=buildPicker(app.dl);
-  document.getElementById('modalBody').innerHTML=`
-    <div class="mhead">
-      <div class="mico">${ico}</div>
-      <div>
-        <div class="mtitle">${esc(app.name)}</div>
-        <div class="mdev">${esc(app.dev)}</div>
-        <span class="mver">v${esc(app.ver)}</span>
-        <div class="mcats">${cats}</div>
-      </div>
-      <button class="mclose" id="mClose">✕</button>
-    </div>
-    <p class="mdesc">${esc(app.desc||'No description')}</p>
-    <div class="mgrid">
-      <div class="mbox"><div class="mlbl">Size</div><div class="mval">${app.size?fmtSize(app.size):'N/A'}</div></div>
-      <div class="mbox"><div class="mlbl">Min iOS</div><div class="mval">${esc(app.minOS||'N/A')}</div></div>
-      <div class="mbox"><div class="mlbl">Bundle ID</div><div class="mval" style="font-size:10px">${esc(app.bundle||'N/A')}</div></div>
-      <div class="mbox"><div class="mlbl">Source</div><div class="mval" style="font-size:11px">${esc(app.repo)}</div></div>
-    </div>
-    ${app.changelog?`<div class="changelog"><div class="clbl">Changelog</div>${esc(app.changelog)}</div>`:''}
-    <div class="mactions">
-      <button class="btn-modal-install" id="mInstTog">📲 Install via…</button>
-      <button class="btn-modal-dl" id="mDl">⬇ Download IPA</button>
-    </div>
-    <div id="picker" style="display:${showPicker?'block':'none'}">${pickerHTML}</div>
-  `;
-  document.getElementById('overlay').classList.add('open');
-  document.getElementById('mClose').onclick=closeModal;
-  document.getElementById('mInstTog').onclick=()=>{
-    const p=document.getElementById('picker');
-    p.style.display=p.style.display==='none'?'block':'none';
-  };
-  document.getElementById('mDl').onclick=()=>{
-    if(!app.dl||app.dl==='#'){toast('No download URL',true);return;}
-    window.open(app.dl,'_blank');toast('Download started!');
-  };
-}
-
-function buildPicker(dlUrl){
-  if(!dlUrl||dlUrl==='#') return`<div class="ipicker"><p class="inote">No download URL available for this app.</p></div>`;
-  const items=INSTALLERS.map(ins=>`
-    <a class="iitem" href="${esc(ins.scheme(dlUrl))}" target="_blank" rel="noopener">
-      <div class="iico" style="background:${ins.bg}22;border:1px solid ${ins.bg}55">${ins.icon}</div>
-      <div><div class="iname">${esc(ins.name)}</div><div class="idesc">${esc(ins.desc)}</div></div>
-      <span class="iopen">Open →</span>
-    </a>`).join('');
-  return`<div class="ipicker"><div class="iptitle">Choose installer</div><div class="ilist">${items}</div><div class="inote">Tap to open the installer app on your device. The installer must already be installed. If nothing opens, use Download to get the IPA file directly.</div></div>`;
-}
-
-function closeModal(){document.getElementById('overlay').classList.remove('open');}
-document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeModal();});
-
-function toast(msg,isErr=false){
-  const c=document.getElementById('toasts');
-  const el=document.createElement('div');
-  el.className=`toast ${isErr?'err':'ok'}`;
-  el.innerHTML=`<span>${isErr?'❌':'✅'}</span> ${esc(msg)}`;
-  c.appendChild(el);setTimeout(()=>el.remove(),3200);
-}
-
-const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const delay=ms=>new Promise(r=>setTimeout(r,ms));
-function fmtSize(b){return b>=1048576?`${(b/1048576).toFixed(1)} MB`:`${(b/1024).toFixed(0)} KB`;}
-function hue(s){let h=0;for(let i=0;i<(s||'').length;i++)h=s.charCodeAt(i)+((h<<5)-h);const hv=Math.abs(h)%360;return`linear-gradient(135deg,hsl(${hv},60%,32%),hsl(${(hv+55)%360},60%,26%))`;}
-
-document.getElementById('themeBtn').addEventListener('click',function(){
-  const d=document.documentElement,dark=d.dataset.theme==='dark';
-  d.dataset.theme=dark?'light':'dark';this.textContent=dark?'☀️':'🌙';
+// ── iTunes バルク Lookup ──────────────────────────────────────────
+async function itunesBulkLookup(ids) {
+const map = {};
+if (!ids.length) return map;
+try {
+const query  = ids.map(encodeURIComponent).join(’,’);
+const apiUrl = `https://itunes.apple.com/lookup?bundleId=${query}&country=us&limit=${ids.length}`;
+const controller = new AbortController();
+const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+const res = await fetch(apiUrl, {
+signal: controller.signal,
+headers: { ‘User-Agent’: ‘RepoHub/2.0’ }
 });
-document.getElementById('refreshBtn').addEventListener('click',async()=>{
-  document.getElementById('appShell').classList.remove('visible');
-  document.getElementById('loadScreen').classList.remove('done');
-  setProgress(0,'Refreshing…');
-  repos.forEach(r=>{r.apps=[];r.status='pending';r.err=null;});
-  // clear cache so iTunes re-fetches
-  Object.keys(catCache).forEach(k=>delete catCache[k]);
-  allApps=[];filtered=[];renderApps();renderRepos();
+clearTimeout(timer);
+if (!res.ok) return map;
+const data = await res.json();
+for (const item of (data.results ?? [])) {
+if (item.bundleId && item.primaryGenreName) {
+map[item.bundleId] = item.primaryGenreName;
+}
+}
+} catch { /* タイムアウト等 → 空mapを返してUnknown扱い */ }
+return map;
+}
 
-  // Phase 1: repos (10→50%)
-  const total=repos.length; let done=0;
-  await Promise.all(repos.map(async repo=>{
-    setProgress(10+(done/total)*40,`Fetching ${repo.name}…`);
-    await fetchRepo(repo);
-    done++;
-    setProgress(10+(done/total)*40,done<total?`Fetched ${repo.name}`:'Repos loaded');
-  }));
+// ── ユーティリティ ────────────────────────────────────────────────
+function chunkArray(arr, size) {
+const out = [];
+for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+return out;
+}
 
-  // Phase 2: rebuild
-  allApps=repos.filter(r=>r.enabled).flatMap(r=>r.apps);
-  applyFilter();renderCats();renderRepos();
-
-  // Phase 3: iTunes (50→95%)
-  await enrichCategories(allApps,(done,total,name)=>{
-    if(total===0) return;
-    setProgress(50+(done/total)*45,name?`Looking up "${name}"…`:'Fetching categories…');
-  });
-
-  finishLoading();
+function corsResp(body, status = 200, edgeTtl = 0) {
+return new Response(body, {
+status,
+headers: {
+‘Content-Type’: ‘application/json’,
+‘Access-Control-Allow-Origin’: ‘*’,
+‘Access-Control-Allow-Methods’: ‘GET, POST, OPTIONS’,
+‘Access-Control-Allow-Headers’: ‘Content-Type’,
+‘Cache-Control’: edgeTtl > 0
+? `public, max-age=${edgeTtl}, s-maxage=${edgeTtl}`
+: ‘no-store’,
+}
 });
-let st;
-document.getElementById('searchInput').addEventListener('input',e=>{
-  clearTimeout(st);st=setTimeout(()=>{query=e.target.value.trim();applyFilter();},180);
-});
-document.getElementById('sortSel').addEventListener('change',e=>{sort=e.target.value;applyFilter();});
-document.getElementById('gridBtn').addEventListener('click',()=>{
-  isGrid=true;document.getElementById('appGrid').classList.remove('list');
-  document.getElementById('gridBtn').classList.add('active');document.getElementById('listBtn').classList.remove('active');
-});
-document.getElementById('listBtn').addEventListener('click',()=>{
-  isGrid=false;document.getElementById('appGrid').classList.add('list');
-  document.getElementById('listBtn').classList.add('active');document.getElementById('gridBtn').classList.remove('active');
-});
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')closeModal();
-  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();document.getElementById('searchInput').focus();}
-});
-
-boot();
-</script>
-</body>
-</html>
+}
