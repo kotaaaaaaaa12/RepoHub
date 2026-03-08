@@ -482,10 +482,8 @@ async function fetchCategoryBatch(ids){
 
   for(const chunk of chunks){
     try{
-      const r=await fetch(`${CATEGORY_WORKER_URL}/batch`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({bundleIds:chunk}),
+      const qs=chunk.map(encodeURIComponent).join(',');
+      const r=await fetch(`${CATEGORY_WORKER_URL}/batch?ids=${qs}`,{
         signal:AbortSignal.timeout(30000),
       });
       if(!r.ok){
@@ -521,10 +519,8 @@ async function enrichCategories(apps, onProgress){
   let fetched=0;
   for(const chunk of chunks){
     try{
-      const r=await fetch(`${CATEGORY_WORKER_URL}/batch`,{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({bundleIds:chunk}),
+      const qs=chunk.map(encodeURIComponent).join(',');
+      const r=await fetch(`${CATEGORY_WORKER_URL}/batch?ids=${qs}`,{
         signal:AbortSignal.timeout(30000),
       });
       if(r.ok){
