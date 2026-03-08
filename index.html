@@ -87,14 +87,6 @@
   .atag{background:var(--tag-bg);color:var(--tag-color);border-radius:99px;padding:2px 7px;font-size:10px;font-weight:500;white-space:nowrap}
   .srcbadge{position:absolute;top:10px;right:10px;font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:99px;padding:1px 7px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cbtnrow{display:flex;gap:6px;flex-shrink:0}
-  .btn-fav{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s}
-  .btn-fav:hover{border-color:#ff6584;color:#ff6584}
-  .btn-fav.on{border-color:#ff6584;color:#ff6584;background:rgba(255,101,132,.1)}
-  .card.fav-card{border-color:rgba(255,101,132,.35)}
-  /* モーダルのお気に入りボタン */
-  .btn-modal-fav{background:transparent;color:var(--text3);border:1px solid var(--border);border-radius:var(--rs);padding:13px;font-family:'DM Sans',sans-serif;font-size:15px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap}
-  .btn-modal-fav:hover{border-color:#ff6584;color:#ff6584}
-  .btn-modal-fav.on{border-color:#ff6584;color:#ff6584;background:rgba(255,101,132,.1)}
   .btn-install{background:var(--accent);color:#fff;border:none;border-radius:99px;padding:5px 12px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;white-space:nowrap}
   .btn-install:hover{opacity:.85;transform:scale(1.05)}
   .btn-dl{background:transparent;color:var(--text2);border:1px solid var(--border);border-radius:99px;padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;white-space:nowrap}
@@ -317,7 +309,6 @@ padding:6px 0 max(6px,env(safe-area-inset-bottom));
     </div>
     <div class="sc">
       <div class="stitle"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Sort &amp; Filter</div>
-      <div class="fgap" style="margin-bottom:10px"><button id="favFilterBtn" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:8px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text2);cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .2s" onclick="toggleFavFilter()"><svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg><span id="favFilterLabel">Show Favorites</span></button></div>
       <div class="flbl">Sort by</div>
       <select class="fsel" id="sortSel">
         <option value="name-asc">Name A → Z</option>
@@ -428,27 +419,7 @@ const INSTALLERS=[
 ];
 
 let repos=[],allApps=[],filtered=[];
-let activeCat='all',sort='name-asc',query='',isGrid=false,showFavOnly=false;
-
-// お気に入り（LocalStorage永続化）
-const FAV_KEY='repohub_favs';
-const favs=new Set(JSON.parse(localStorage.getItem(FAV_KEY)||'[]'));
-function saveFavs(){localStorage.setItem(FAV_KEY,JSON.stringify([...favs]));}
-function toggleFav(id){
-  if(favs.has(id)){favs.delete(id);toast('Removed from favorites');}
-  else{favs.add(id);toast('Added to favorites ♥');}
-  saveFavs();
-  renderCats();
-  scheduleFilter();
-}
-function toggleFavFilter(){
-  showFavOnly=!showFavOnly;
-  document.getElementById('favFilterLabel').textContent=showFavOnly?'All Apps':'Show Favorites';
-  const btn=document.getElementById('favFilterBtn');
-  btn.style.borderColor=showFavOnly?'#ff6584':'var(--border)';
-  btn.style.color=showFavOnly?'#ff6584':'var(--text2)';
-  scheduleFilter();
-}
+let activeCat='all',sort='name-asc',query='',isGrid=false;
 
 // Category Worker URL — デプロイ後にここを書き換えてな
 const CATEGORY_WORKER_URL = 'https://repohub-category-worker.kotaaaaaaaa12.workers.dev';
@@ -695,7 +666,6 @@ function applyFilter(){
     a=a.filter(x=>x._ql.includes(q));
   }
   if(activeCat!=='all') a=a.filter(x=>x.cats&&x.cats.includes(activeCat));
-  if(showFavOnly||activeCat==='__favs__') a=a.filter(x=>favs.has(x.id));
   switch(sort){
     case 'name-asc': a=[...a].sort((x,y)=>x.name.localeCompare(y.name));break;
     case 'name-desc':a=[...a].sort((x,y)=>y.name.localeCompare(x.name));break;
@@ -732,9 +702,7 @@ function renderCats(){
   allApps.forEach(a=>(a.cats||[]).forEach(c=>{catCount[c]=(catCount[c]||0)+1;}));
   const cats=Object.keys(catCount).sort();
   const el=document.getElementById('catFilter');
-  const favSvg=`<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="${activeCat==='__favs__'?'currentColor':'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
-  el.innerHTML=`<span class="tag ${activeCat==='__favs__'?'active':''}" data-c="__favs__" style="display:flex;align-items:center;gap:4px">${favSvg} Favorites <span class="cat-badge">${favs.size}</span></span>`
-    +`<span class="tag ${activeCat==='all'?'active':''}" data-c="all">All <span class="cat-badge">${allApps.length}</span></span>`
+  el.innerHTML=`<span class="tag ${activeCat==='all'?'active':''}" data-c="all">All <span class="cat-badge">${allApps.length}</span></span>`
     +cats.map(c=>`<span class="tag ${activeCat===c?'active':''}" data-c="${esc(c)}">${esc(c)} <span class="cat-badge">${catCount[c]}</span></span>`).join('');
   el.onclick=e=>{
     const t=e.target.closest('.tag');if(!t)return;
@@ -750,7 +718,7 @@ function renderApps(){
   const frag=document.createDocumentFragment();
   filtered.forEach((a,i)=>{
     const div=document.createElement('div');
-    div.className='card'+(favs.has(a.id)?' fav-card':'');
+    div.className='card';
     div.dataset.aid=a.id;
     // アニメーション遅延は最初の20件のみ（大量時にアニメが重い）
     if(i<20) div.style.animationDelay=Math.min(i*20,300)+'ms';
@@ -760,7 +728,7 @@ function renderApps(){
       <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div>
       ${a.updatedAt?`<div class="aupdated">${fmtDate(a.updatedAt)}</div>`:''}
       <div class="adesc">${esc(a.desc||'No description')}</div>
-      <div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-fav ${favs.has(a.id)?'on':''}" data-fav="${esc(a.id)}" title="Favorite"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='${favs.has(a.id)?'#ff6584':'none'}' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg></button><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>`;
+      <div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>`;
     frag.appendChild(div);
   });
   grid.innerHTML='';
@@ -769,7 +737,6 @@ function renderApps(){
   grid.onclick=e=>{
     const btn_i=e.target.closest('.btn-install');
     const btn_d=e.target.closest('.btn-dl');
-    const btn_f=e.target.closest('.btn-fav');
     const card=e.target.closest('.card');
     if(btn_i){
       e.stopPropagation();
@@ -780,10 +747,6 @@ function renderApps(){
       const url=btn_d.dataset.dl;
       if(!url||url==='#'){toast('No download URL available',true);return;}
       window.open(url,'_blank');toast('Download started!');return;
-    }
-    if(btn_f){
-      e.stopPropagation();
-      toggleFav(btn_f.dataset.fav);return;
     }
     if(card){
       const app=appMap[card.dataset.aid];if(app) openModal(app);
@@ -828,7 +791,6 @@ function openModal(app,showPicker=false){
     <div class="mactions">
       <button class="btn-modal-install" id="mInstTog"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg> Install via…</button>
       <button class="btn-modal-dl" id="mDl"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download IPA</button>
-      <button class="btn-modal-fav ${favs.has(app.id)?'on':''}" id="mFav"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="${favs.has(app.id)?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
     </div>
     <div id="picker" style="display:${showPicker?'block':'none'}">${pickerHTML}</div>
   `;
@@ -843,13 +805,6 @@ function openModal(app,showPicker=false){
   document.getElementById('mDl').onclick=()=>{
     if(!hasDl){toast('No download URL',true);return;}
     window.open(app.dl,'_blank');toast('Download started!');
-  };
-  document.getElementById('mFav').onclick=()=>{
-    toggleFav(app.id);
-    const btn=document.getElementById('mFav');
-    const on=favs.has(app.id);
-    btn.className='btn-modal-fav'+(on?' on':'');
-    btn.querySelector('svg').setAttribute('fill',on?'currentColor':'none');
   };
   document.getElementById('mShare').onclick=()=>{
     navigator.clipboard.writeText(shareUrl).then(()=>toast('Share link copied!')).catch(()=>toast('Copy failed',true));
@@ -977,15 +932,13 @@ document.addEventListener('keydown',e=>{
     const dst = document.getElementById('catSheetBody');
     const src = document.getElementById('catFilter');
     dst.innerHTML = '<div class="tagrow">' + src.innerHTML + '</div>';
-    // イベント委譲で処理（__favs__含む全タグ対応）
-    dst.onclick=e=>{
-      const t=e.target.closest('.tag');if(!t)return;
-      activeCat=t.dataset.c;
-      // __favs__の場合はshowFavOnlyも連動
-      showFavOnly=(activeCat==='__favs__');
-      renderCats();scheduleFilter();
-      closeSheet();setNavActive('spNavApps');
-    };
+    dst.querySelectorAll('.tag').forEach(t=>{
+      t.addEventListener('click',()=>{
+        activeCat=t.dataset.c;
+        renderCats();applyFilter();
+        closeSheet();setNavActive('spNavApps');
+      });
+    });
     openSheet(catSheet,'spNavCat');
   });
 
