@@ -131,22 +131,93 @@
   .toast{background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:10px 14px;font-size:13px;color:var(--text);box-shadow:0 6px 24px rgba(0,0,0,.3);display:flex;align-items:center;gap:7px;animation:tIn .25s ease;max-width:260px}
   .toast.ok{border-color:var(--success)}.toast.err{border-color:var(--danger)}
   @keyframes tIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
-  @media(max-width:720px){.main{grid-template-columns:1fr;padding:14px}.sidebar{position:static}.grid{grid-template-columns:1fr}}
+  /* ── スクロールバー ── */
   ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
-  #loadScreen{position:fixed;inset:0;z-index:1000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
-  #loadScreen.done{opacity:0;visibility:hidden;pointer-events:none}
-  .ls-logo{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:10px;margin-bottom:48px;animation:lsFadeIn .5s ease both}
-  .ls-ldot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:blink 2s infinite}
-  .ls-wrap{width:min(320px,80vw);animation:lsFadeIn .5s .1s ease both}
-  .ls-track{width:100%;height:4px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-bottom:16px;border:1px solid var(--border)}
-  .ls-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .35s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(108,99,255,.6)}
-  .ls-bot{display:flex;align-items:center;justify-content:space-between}
-  .ls-status{font-size:12px;color:var(--text3);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;transition:opacity .15s}
-  .ls-pct{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0}
-  @keyframes lsFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-  #appShell{opacity:0;transition:opacity .5s ease}
-  #appShell.visible{opacity:1}
+
+/* ── モバイル共通 ── */
+@media(max-width:768px){
+header{padding:0 14px}
+.hi{height:54px;gap:10px}
+.logo{font-size:15px}
+.hsearch{max-width:none;flex:1}
+.hact{gap:4px}
+.bico{width:32px;height:32px;font-size:13px}
+.main{grid-template-columns:1fr;padding:12px;gap:12px}
+.sidebar{position:static;display:none}
+.sidebar.sp-open{display:flex}
+.ca{min-width:0}
+.cbar{margin-bottom:12px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.grid.list{grid-template-columns:1fr;gap:6px}
+.card{padding:13px}
+.aico{width:44px;height:44px;border-radius:11px;font-size:22px}
+.aname{font-size:13px}
+.adev{font-size:11px}
+.adesc{font-size:11px;-webkit-line-clamp:2}
+.btn-install{font-size:11px;padding:4px 10px}
+.btn-dl{font-size:11px;padding:4px 8px}
+.modal{padding:18px;border-radius:16px;max-height:92vh}
+.mhead{gap:12px;margin-bottom:14px}
+.mico{width:56px;height:56px;border-radius:14px;font-size:28px}
+.mtitle{font-size:17px}
+.mgrid{grid-template-columns:1fr 1fr;gap:6px}
+.mactions{flex-direction:column;gap:8px}
+.btn-modal-install,.btn-modal-dl{padding:11px}
+.toasts{bottom:70px;right:12px;left:12px}
+.toast{max-width:none}
+/* ボトムナビ */
+.sp-nav{display:flex}
+}
+
+/* ── スマホ用ボトムナビ ── */
+.sp-nav{
+display:none;
+position:fixed;bottom:0;left:0;right:0;z-index:150;
+background:var(–bg2);border-top:1px solid var(–border);
+backdrop-filter:blur(20px);
+padding:8px 0 max(8px,env(safe-area-inset-bottom));
+}
+.sp-nav-inner{display:flex;justify-content:space-around;align-items:center}
+.sp-nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;border:none;background:transparent;color:var(–text3);cursor:pointer;padding:4px 0;font-size:10px;font-family:‘DM Sans’,sans-serif;transition:color .15s}
+.sp-nb.active{color:var(–accent)}
+.sp-nb-ico{font-size:20px;line-height:1}
+/* スマホ時のメインエリアに下padding */
+@media(max-width:768px){
+#appShell{padding-bottom:70px}
+.overlay{padding:12px;align-items:flex-end}
+.modal{border-radius:20px 20px 12px 12px;max-height:90vh}
+}
+
+/* ── スマホ用サイドバーオーバーレイ ── */
+.sp-sidebar-overlay{
+display:none;position:fixed;inset:0;z-index:140;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);
+}
+@media(max-width:768px){
+.sp-sidebar-overlay.open{display:block}
+.sidebar.sp-open{
+display:flex;position:fixed;left:0;top:0;bottom:0;z-index:145;
+width:min(300px,88vw);overflow-y:auto;
+background:var(–bg);border-right:1px solid var(–border);
+padding:60px 14px 80px;
+animation:slideInLeft .25s ease;
+}
+}
+@keyframes slideInLeft{from{transform:translateX(-100%)}to{transform:translateX(0)}}
+#loadScreen{position:fixed;inset:0;z-index:1000;background:var(–bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease,visibility .6s ease}
+#loadScreen.done{opacity:0;visibility:hidden;pointer-events:none}
+.ls-logo{font-family:‘Space Mono’,monospace;font-size:22px;font-weight:700;color:var(–text);display:flex;align-items:center;gap:10px;margin-bottom:48px;animation:lsFadeIn .5s ease both}
+.ls-ldot{width:10px;height:10px;border-radius:50%;background:var(–accent);box-shadow:0 0 12px var(–accent);animation:blink 2s infinite}
+.ls-wrap{width:min(320px,80vw);animation:lsFadeIn .5s .1s ease both}
+.ls-track{width:100%;height:4px;background:var(–bg3);border-radius:99px;overflow:hidden;margin-bottom:16px;border:1px solid var(–border)}
+.ls-fill{height:100%;width:0%;background:linear-gradient(90deg,var(–accent),var(–accent2));border-radius:99px;transition:width .35s cubic-bezier(.4,0,.2,1);box-shadow:0 0 10px rgba(108,99,255,.6)}
+.ls-bot{display:flex;align-items:center;justify-content:space-between}
+.ls-status{font-size:12px;color:var(–text3);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:12px;transition:opacity .15s}
+.ls-pct{font-family:‘Space Mono’,monospace;font-size:13px;font-weight:700;color:var(–accent);flex-shrink:0}
+@keyframes lsFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+#appShell{opacity:0;transition:opacity .5s ease}
+#appShell.visible{opacity:1}
 </style>
+
 </head>
 <body>
 
@@ -214,6 +285,30 @@
 
 <div class="overlay" id="overlay"><div class="modal" id="modalBody"></div></div>
 <div class="toasts" id="toasts"></div>
+
+<!-- スマホ用サイドバーオーバーレイ -->
+
+<div class="sp-sidebar-overlay" id="spSidebarOverlay"></div>
+
+<!-- スマホ用ボトムナビ -->
+
+<nav class="sp-nav">
+  <div class="sp-nav-inner">
+    <button class="sp-nb active" id="spNavApps">
+      <span class="sp-nb-ico">📱</span>Apps
+    </button>
+    <button class="sp-nb" id="spNavFilter">
+      <span class="sp-nb-ico">🔍</span>Filter
+    </button>
+    <button class="sp-nb" id="spNavRepos">
+      <span class="sp-nb-ico">📦</span>Repos
+    </button>
+    <button class="sp-nb" id="spNavTheme">
+      <span class="sp-nb-ico" id="spThemeIco">🌙</span>Theme
+    </button>
+  </div>
+</nav>
+
 </div><!-- /appShell -->
 
 <script>
@@ -234,7 +329,7 @@ let repos=[],allApps=[],filtered=[];
 let activeCat='all',sort='name-asc',query='',isGrid=true;
 
 // Category Worker URL — デプロイ後にここを書き換えてな
-const CATEGORY_WORKER_URL = 'https://repohub-category-worker.kotaaaaaaaa12.workers.dev/';
+const CATEGORY_WORKER_URL = 'https://repohub-category-worker.kotaaaaaaaa12.workers.dev';
 
 const catCache={};
 
@@ -359,7 +454,7 @@ async function fetchRepo(repo){
     await delay(500);repo.apps=demoApps(repo);repo.status='ok';renderRepos();return;
   }
   try{
-    const proxy=`https://cors-proxy.kotaaaaaaaa12.workers.dev/corsproxy/?apiurl=${encodeURIComponent(repo.url)}`;
+    const proxy=`https://corsproxy.io/?url=${encodeURIComponent(repo.url)}`;
     const res=await fetch(proxy,{signal:AbortSignal.timeout(12000)});
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const text=await res.text();
@@ -601,6 +696,28 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape')closeModal();
   if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();document.getElementById('searchInput').focus();}
 });
+
+// スマホ用ボトムナビ制御
+(function(){
+  const sidebar=document.querySelector('.sidebar');
+  const spOverlay=document.getElementById('spSidebarOverlay');
+  function closeSidebar(){sidebar.classList.remove('sp-open');spOverlay.classList.remove('open');}
+  function setNavActive(id){document.querySelectorAll('.sp-nb').forEach(b=>b.classList.remove('active'));document.getElementById(id).classList.add('active');}
+  document.getElementById('spNavApps').addEventListener('click',()=>{closeSidebar();setNavActive('spNavApps');window.scrollTo({top:0,behavior:'smooth'});});
+  document.getElementById('spNavFilter').addEventListener('click',()=>{closeSidebar();setNavActive('spNavFilter');document.getElementById('searchInput').focus();window.scrollTo({top:0,behavior:'smooth'});});
+  document.getElementById('spNavRepos').addEventListener('click',()=>{
+    if(sidebar.classList.contains('sp-open')){closeSidebar();setNavActive('spNavApps');}
+    else{sidebar.classList.add('sp-open');spOverlay.classList.add('open');setNavActive('spNavRepos');}
+  });
+  document.getElementById('spNavTheme').addEventListener('click',()=>{
+    document.getElementById('themeBtn').click();
+    setTimeout(()=>{
+      const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+      document.getElementById('spThemeIco').textContent=isDark?'🌙':'☀️';
+    },10);
+  });
+  spOverlay.addEventListener('click',()=>{closeSidebar();setNavActive('spNavApps');});
+})();
 
 boot();
 </script>
