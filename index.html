@@ -983,7 +983,7 @@ document.addEventListener('keydown',e=>{
   const isMac=/Mac/.test(navigator.platform||ua)&&!isMobile;
   const el=document.getElementById('searchInput');
   if(isMobile) el.placeholder='Search…';
-  else if(isMac) el.placeholder='Search… (⌘K)';
+  else if(isMac) el.placeholder='Search… (⌘+K)';
   else el.placeholder='Search… (Ctrl+K)';
 })();
 });
