@@ -866,7 +866,7 @@ function openModal(app,showPicker=false){
   const ico=app.icon?`<img src="${esc(app.icon)}" alt="" onerror="this.parentNode.textContent='${app.emoji||'📦'}';">`:(app.emoji||'📦');
   const cats=(app.cats||[]).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
   const pickerHTML=buildPicker(app.dl);
-  const shareUrl=`${location.origin}${location.pathname}?app=${encodeURIComponent(app.bundle||app.id)}`;
+  const shareUrl=`${location.origin}${location.pathname}?app=${encodeURIComponent(app.id)}`;
   const hasDl=app.dl&&app.dl!=='#';
   document.getElementById('modalBody').innerHTML=`
     <div class="mhead">
@@ -901,7 +901,7 @@ function openModal(app,showPicker=false){
     <div id="picker" style="display:${showPicker?'block':'none'}">${pickerHTML}</div>
   `;
   // URLシェア：?app=bundle を履歴に積む
-  history.replaceState(null,'',`?app=${encodeURIComponent(app.bundle||app.id)}`);
+  history.replaceState(null,'',`?app=${encodeURIComponent(app.id)}`);
   document.getElementById('overlay').classList.add('open');
   document.getElementById('mClose').onclick=closeModal;
   document.getElementById('mInstTog').onclick=()=>{
@@ -1177,8 +1177,8 @@ function checkUrlApp(){
   const p=new URLSearchParams(location.search);
   const bundle=p.get('app');
   if(!bundle) return;
-  // bundleIdかidで探す
-  const app=allApps.find(a=>a.bundle===bundle||a.id===bundle);
+  // idで完全一致、なければbundleIdで最初のやつ（後方互換）
+  const app=appMap[bundle]||allApps.find(a=>a.bundle===bundle);
   if(app) openModal(app);
   else toast(`App "${bundle}" not found in loaded repos`,true);
 }
