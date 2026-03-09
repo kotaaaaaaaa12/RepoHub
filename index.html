@@ -637,7 +637,7 @@ async function fetchRepo(repo){
 function parseAltStore(json,repo){
   return(json.apps||[]).map(a=>{
     const v=a.versions?.[0];
-    const obj={id:`${repo.id}_${a.bundleIdentifier||Math.random()}`,name:a.name||'?',dev:a.developerName||json.name||repo.name,desc:a.localizedDescription||a.subtitle||'',updatedAt:v?.date||a.versionDate||null,ver:v?.version||a.version||'?',size:v?.size||a.size||0,dl:v?.downloadURL||a.downloadURL||'#',icon:a.iconURL||null,cats:a.category?[a.category]:(a.categories||[]),minOS:a.minimumOSVersion||null,bundle:a.bundleIdentifier||'',changelog:v?.localizedDescription||'',repo:repo.name,repoId:repo.id};
+    const obj={id:`${repo.id}_${a.bundleIdentifier||Math.random()}_${(v?.version||a.version||'').replace(/[^a-zA-Z0-9.]/g,'')||Math.random()}`,name:a.name||'?',dev:a.developerName||json.name||repo.name,desc:a.localizedDescription||a.subtitle||'',updatedAt:v?.date||a.versionDate||null,ver:v?.version||a.version||'?',size:v?.size||a.size||0,dl:v?.downloadURL||a.downloadURL||'#',icon:a.iconURL||null,cats:a.category?[a.category]:(a.categories||[]),minOS:a.minimumOSVersion||null,bundle:a.bundleIdentifier||'',changelog:v?.localizedDescription||'',repo:repo.name,repoId:repo.id};
     obj._ql=(obj.name+' '+obj.dev+' '+obj.desc).toLowerCase();
     return obj;
   });
