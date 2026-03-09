@@ -913,6 +913,7 @@ function buildCard(a){
   const firstCat=(a.cats&&a.cats[0])?`<span class="aver" style="background:var(--bg3);color:var(--text3)">${esc(a.cats[0])}</span>`:'';
   const badge=getBadge(a);
   const badgeHtml=badge==='new'?'<span class="badge-new">NEW</span>':badge==='upd'?'<span class="badge-upd">UPD</span>':'';
+  if(badge) setTimeout(()=>markSeen(a),2000); // 2秒表示されたら既読
   div.innerHTML=`<div class="srcbadge">${esc(a.repo)}</div>
     <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname" style="display:flex;align-items:center;gap:4px;overflow:hidden">${esc(a.name)}${badgeHtml}</div><div class="adev">${esc(a.repo)}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px"><span class="aver">v${esc(a.ver)}</span>${firstCat}</div></div></div>
     ${a.updatedAt?`<div class="aupdated">${fmtDate(a.updatedAt)}</div>`:''}
@@ -1043,9 +1044,8 @@ function openModal(app,showPicker=false){
   `;
   // URLシェア：?app=bundle を履歴に積む
   history.replaceState(null,'',`?app=${encodeURIComponent(app.id)}`);
-  // 閲覧履歴に追加 & 既読マーク
+  // 閲覧履歴に追加
   addRecent(app);
-  markSeen(app);
   document.getElementById('overlay').classList.add('open');
   document.getElementById('mClose').onclick=closeModal;
   document.getElementById('mInstTog').onclick=()=>{
