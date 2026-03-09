@@ -987,8 +987,8 @@ function renderCats(){
   el.onclick=e=>{
     const t=e.target.closest('.tag');if(!t)return;
     const c=t.dataset.c;
-    if(c==='all'){activeCats.clear();}
-    else if(c==='__favs__'){activeCats.clear();activeCats.add('__favs__');}
+    if(c==='all'){activeCats.clear();showFavOnly=false;}
+    else if(c==='__favs__'){activeCats.clear();activeCats.add('__favs__');showFavOnly=false;}
     else{
       activeCats.delete('__favs__');
       if(activeCats.has(c)) activeCats.delete(c);
@@ -1388,6 +1388,7 @@ document.getElementById('statsBtn').addEventListener('click',openStats);
 document.getElementById('statsClose').addEventListener('click',()=>{document.getElementById('statsOverlay').style.display='none';});
 document.getElementById('statsOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('statsOverlay')) document.getElementById('statsOverlay').style.display='none';});
 document.getElementById('sortSel').value=sort;
+document.getElementById('spSortSel').value=sort;
 document.getElementById('sortSel').addEventListener('change',e=>{sort=e.target.value;localStorage.setItem(SORT_KEY,sort);scheduleFilter();});
 
 
@@ -1453,7 +1454,7 @@ document.addEventListener('keydown',e=>{
     dst.onclick=e=>{
       const t=e.target.closest('.tag');if(!t)return;
       const c=t.dataset.c;
-      if(c==='all'){activeCats.clear();}
+      if(c==='all'){activeCats.clear();showFavOnly=false;}
       else if(c==='__favs__'){activeCats.clear();activeCats.add('__favs__');showFavOnly=false;}
       else{
         activeCats.delete('__favs__');
@@ -1537,12 +1538,14 @@ document.addEventListener('keydown',e=>{
   // 設定内：ソート
   document.getElementById('spSortSel').addEventListener('change',e=>{
     sort=e.target.value;
-    document.getElementById('statsBtn').addEventListener('click',openStats);
-document.getElementById('statsClose').addEventListener('click',()=>{document.getElementById('statsOverlay').style.display='none';});
-document.getElementById('statsOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('statsOverlay')) document.getElementById('statsOverlay').style.display='none';});
-document.getElementById('sortSel').value=sort;
-    applyFilter();
+    localStorage.setItem(SORT_KEY,sort);
+    document.getElementById('sortSel').value=sort;
+    scheduleFilter();
   });
+
+  document.getElementById('statsBtn').addEventListener('click',openStats);
+  document.getElementById('statsClose').addEventListener('click',()=>{document.getElementById('statsOverlay').style.display='none';});
+  document.getElementById('statsOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('statsOverlay')) document.getElementById('statsOverlay').style.display='none';});
 
   // ハンバーガーボタン（スマホヘッダー）→ 設定シート
 ;
