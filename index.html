@@ -450,9 +450,10 @@ function toggleFav(id){
   saveFavs();
   renderCats();
   _noScrollReset=true;
-  // favフィルタ中はDOM強制更新（VIRT.startをリセットして再描画）
+  // applyFilterを直接呼んでからvirtRenderを強制実行
+  applyFilter();
   VIRT.start=-1;VIRT.end=-1;
-  scheduleFilter();
+  virtRender();
 }
 function toggleFavFilter(){
   showFavOnly=!showFavOnly;
