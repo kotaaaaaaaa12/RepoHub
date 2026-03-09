@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="RepoHub">
 <link rel="apple-touch-icon" href="./images/icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="./images/icon-512.png">
+<link rel="icon" type="image/png" sizes="192x192" href="./images/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700&display=swap" rel="stylesheet">
 <style>
@@ -52,6 +53,11 @@
   .fsel{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:8px 30px 8px 11px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;transition:border-color .2s}
   .fsel:focus{border-color:var(--accent)}
   .fgap{margin-top:10px}
+  /* トップに戻るボタン */
+  #toTopBtn{position:fixed;bottom:24px;right:20px;width:42px;height:42px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(108,99,255,.4);opacity:0;transform:translateY(16px);transition:opacity .25s,transform .25s;pointer-events:none;z-index:500}
+  #toTopBtn.show{opacity:1;transform:translateY(0);pointer-events:auto}
+  #toTopBtn:hover{opacity:.85}
+  @media(max-width:768px){#toTopBtn{bottom:80px;right:16px;width:38px;height:38px}}
   /* 検索履歴ドロップダウン */
   .search-hist{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);z-index:200;overflow:hidden;display:none}
   .search-hist.show{display:block}
@@ -101,6 +107,8 @@
   .atag{background:var(--tag-bg);color:var(--tag-color);border-radius:99px;padding:2px 7px;font-size:10px;font-weight:500;white-space:nowrap}
   .srcbadge{position:absolute;top:10px;right:10px;font-size:10px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:99px;padding:1px 7px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .cbtnrow{display:flex;gap:6px;flex-shrink:0}
+  .badge-new{background:#ff6584;color:#fff;font-size:9px;font-weight:700;font-family:'Space Mono',monospace;padding:1px 5px;border-radius:99px;letter-spacing:.04em;vertical-align:middle;margin-left:4px;flex-shrink:0}
+  .badge-upd{background:var(--accent);color:#fff;font-size:9px;font-weight:700;font-family:'Space Mono',monospace;padding:1px 5px;border-radius:99px;letter-spacing:.04em;vertical-align:middle;margin-left:4px;flex-shrink:0}
   .btn-fav{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s}
   .btn-fav:hover{border-color:#ff6584;color:#ff6584}
   .btn-fav.on{border-color:#ff6584;color:#ff6584;background:rgba(255,101,132,.1)}
@@ -440,6 +448,7 @@
   </div>
 </nav>
 
+  <button id="toTopBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>
 </div><!-- /appShell -->
 
 <script>
@@ -458,6 +467,33 @@ const INSTALLERS=[
 
 let repos=[],allApps=[],filtered=[];
 const SORT_KEY='repohub_sort';
+
+// ── アプリ更新バッジ ────────────────────────────────────────────────
+const SEEN_KEY='repohub_seen'; // {appKey: ver} 形式で保存
+function getSeenMap(){return JSON.parse(localStorage.getItem(SEEN_KEY)||'{}');}
+function appSeenKey(a){return a.repoId+'|'+a.bundle;}
+// バッジ種別: 'new'=初見アプリ, 'upd'=バージョンアップ, null=変化なし
+function getBadge(a){
+  const map=getSeenMap();
+  const k=appSeenKey(a);
+  if(!(k in map)) return 'new';      // 一度も見てないアプリ
+  if(map[k]!==a.ver) return 'upd';  // バージョンが変わった
+  return null;
+}
+function markSeen(a){
+  const map=getSeenMap();
+  map[appSeenKey(a)]=a.ver;
+  localStorage.setItem(SEEN_KEY,JSON.stringify(map));
+}
+// 全アプリを既読にする（初回ロード時）
+function markAllSeen(){
+  const map=getSeenMap();
+  allApps.forEach(a=>{
+    const k=appSeenKey(a);
+    if(!(k in map)) map[k]=a.ver; // 初回はNEW出さない
+  });
+  localStorage.setItem(SEEN_KEY,JSON.stringify(map));
+}
 let activeCat='all',sort=localStorage.getItem(SORT_KEY)||'name-asc',query='',isGrid=false,showFavOnly=false,_noScrollReset=false;
 
 // お気に入り（LocalStorage永続化）
@@ -875,8 +911,10 @@ function buildCard(a){
   const ico=a.icon?`<img src="${esc(a.icon)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${a.emoji||'📦'}';">`:(a.emoji||'📦');
   const tags=(a.cats||[]).slice(0,2).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
   const firstCat=(a.cats&&a.cats[0])?`<span class="aver" style="background:var(--bg3);color:var(--text3)">${esc(a.cats[0])}</span>`:'';
+  const badge=getBadge(a);
+  const badgeHtml=badge==='new'?'<span class="badge-new">NEW</span>':badge==='upd'?'<span class="badge-upd">UPD</span>':'';
   div.innerHTML=`<div class="srcbadge">${esc(a.repo)}</div>
-    <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.repo)}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px"><span class="aver">v${esc(a.ver)}</span>${firstCat}</div></div></div>
+    <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname" style="display:flex;align-items:center;gap:4px;overflow:hidden">${esc(a.name)}${badgeHtml}</div><div class="adev">${esc(a.repo)}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px"><span class="aver">v${esc(a.ver)}</span>${firstCat}</div></div></div>
     ${a.updatedAt?`<div class="aupdated">${fmtDate(a.updatedAt)}</div>`:''}
     <div class="adesc">${esc(a.desc||'No description')}</div>
     <div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-fav ${appInFavs(a)?'on':''}" data-fav="${esc(a.id)}" title="Favorite"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='${appInFavs(a)?'#ff6584':'none'}' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg></button><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>`;
@@ -956,6 +994,8 @@ window.addEventListener('resize',()=>{
 },{passive:true});
 
 window.addEventListener('scroll',()=>{
+  // トップに戻るボタン
+  document.getElementById('toTopBtn').classList.toggle('show', window.scrollY > 400);
   if(VIRT.raf) return;
   VIRT.raf=requestAnimationFrame(()=>{VIRT.raf=null;virtRender();});
 },{passive:true});
@@ -1003,8 +1043,9 @@ function openModal(app,showPicker=false){
   `;
   // URLシェア：?app=bundle を履歴に積む
   history.replaceState(null,'',`?app=${encodeURIComponent(app.id)}`);
-  // 閲覧履歴に追加
+  // 閲覧履歴に追加 & 既読マーク
   addRecent(app);
+  markSeen(app);
   document.getElementById('overlay').classList.add('open');
   document.getElementById('mClose').onclick=closeModal;
   document.getElementById('mInstTog').onclick=()=>{
