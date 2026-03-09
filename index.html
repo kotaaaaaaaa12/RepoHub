@@ -433,7 +433,7 @@ const INSTALLERS=[
 ];
 
 let repos=[],allApps=[],filtered=[];
-let activeCat='all',sort='name-asc',query='',isGrid=false,showFavOnly=false;
+let activeCat='all',sort='name-asc',query='',isGrid=false,showFavOnly=false,_noScrollReset=false;
 
 // お気に入り（LocalStorage永続化）
 const FAV_KEY='repohub_favs';
@@ -449,6 +449,9 @@ function toggleFav(id){
   else{favs.add(k);toast('Added to favorites ♥');}
   saveFavs();
   renderCats();
+  _noScrollReset=true;
+  // favフィルタ中はDOM強制更新（VIRT.startをリセットして再描画）
+  VIRT.start=-1;VIRT.end=-1;
   scheduleFilter();
 }
 function toggleFavFilter(){
@@ -724,7 +727,8 @@ function applyFilter(){
     default: a=[...a];
   }
   filtered=a;
-  window.scrollTo({top:0});
+  if(!_noScrollReset) window.scrollTo({top:0});
+  _noScrollReset=false;
   renderApps();
 }
 
