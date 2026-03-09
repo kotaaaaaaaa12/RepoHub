@@ -462,11 +462,15 @@ function toggleFav(id){
 }
 function toggleFavFilter(){
   showFavOnly=!showFavOnly;
-  document.getElementById('favFilterLabel').textContent=showFavOnly?'All Apps':'Show Favorites';
+  updateFavFilterLabel();
   const btn=document.getElementById('favFilterBtn');
   btn.style.borderColor=showFavOnly?'#ff6584':'var(--border)';
   btn.style.color=showFavOnly?'#ff6584':'var(--text2)';
   scheduleFilter();
+}
+function updateFavFilterLabel(){
+  const catLabel=(activeCat==='all'||activeCat==='__favs__')?'':` in ${activeCat}`;
+  document.getElementById('favFilterLabel').textContent=showFavOnly?`All Apps`:`Favorites${catLabel}`;
 }
 
 // Category Worker URL — デプロイ後にここを書き換えてな
@@ -716,8 +720,15 @@ function applyFilter(){
       return inName||inDev;
     });
   }
-  if(activeCat==='__favs__'||showFavOnly) a=a.filter(x=>appInFavs(x));
-  else if(activeCat!=='all') a=a.filter(x=>x.cats&&x.cats.includes(activeCat));
+  if(activeCat==='__favs__'){
+    // カテゴリタグのFavorites → 全カテゴリのfav
+    a=a.filter(x=>appInFavs(x));
+  } else {
+    // カテゴリ絞り込み
+    if(activeCat!=='all') a=a.filter(x=>x.cats&&x.cats.includes(activeCat));
+    // サイドバーのShow Favorites → 現在のカテゴリ内のfavのみ
+    if(showFavOnly) a=a.filter(x=>appInFavs(x));
+  }
   switch(sort){
     case 'name-asc': a=[...a].sort((x,y)=>x.name.localeCompare(y.name));break;
     case 'name-desc':a=[...a].sort((x,y)=>y.name.localeCompare(x.name));break;
@@ -768,7 +779,7 @@ function renderCats(){
     +cats.map(c=>`<span class="tag ${activeCat===c?'active':''}" data-c="${esc(c)}">${esc(c)} <span class="cat-badge">${catCount[c]}</span></span>`).join('');
   el.onclick=e=>{
     const t=e.target.closest('.tag');if(!t)return;
-    activeCat=t.dataset.c;renderCats();scheduleFilter();
+    activeCat=t.dataset.c;renderCats();updateFavFilterLabel();scheduleFilter();
   };
 }
 
@@ -1123,9 +1134,9 @@ document.addEventListener('keydown',e=>{
     dst.onclick=e=>{
       const t=e.target.closest('.tag');if(!t)return;
       activeCat=t.dataset.c;
-      // __favs__の場合はshowFavOnlyも連動
-      showFavOnly=(activeCat==='__favs__');
-      renderCats();scheduleFilter();
+      // __favs__の場合はshowFavOnlyをオフ（カテゴリfavはapplyFilter側で処理）
+      if(activeCat==='__favs__') showFavOnly=false;
+      renderCats();updateFavFilterLabel();scheduleFilter();
       closeSheet();setNavActive('spNavApps');
     };
     openSheet(catSheet,'spNavCat');
