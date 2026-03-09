@@ -807,8 +807,8 @@ function virtRender(){
   const newStart=Math.max(0,rawStart);
   const newEnd=Math.min(total-1,rawEnd);
 
-  // 変化がなければスキップ
-  if(newStart===VIRT.start && newEnd===VIRT.end && grid.querySelector('.virt-spacer-top')) return;
+  // 変化がなければスキップ（ただし強制更新フラグがあれば通す）
+  if(VIRT.start!==-1 && newStart===VIRT.start && newEnd===VIRT.end && grid.querySelector('.virt-spacer-top')) return;
 
   VIRT.start=newStart;
   VIRT.end=newEnd;
