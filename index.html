@@ -52,6 +52,12 @@
   .fsel{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:8px 30px 8px 11px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;transition:border-color .2s}
   .fsel:focus{border-color:var(--accent)}
   .fgap{margin-top:10px}
+  /* カスタムスクロールバー */
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+  *{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
   .tagrow{display:flex;flex-wrap:wrap;gap:5px}
   .tag{background:var(--tag-bg);color:var(--tag-color);border-radius:99px;padding:4px 10px;font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid transparent}
   .tag:hover{border-color:var(--accent)}
@@ -972,10 +978,6 @@ document.getElementById('searchInput').addEventListener('input',e=>{
 document.getElementById('sortSel').addEventListener('change',e=>{sort=e.target.value;scheduleFilter();});
 
 
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')closeModal();
-  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();document.getElementById('searchInput').focus();}
-
 // Search placeholderをデバイスに応じて設定
 (()=>{
   const ua=navigator.userAgent;
@@ -986,6 +988,10 @@ document.addEventListener('keydown',e=>{
   else if(isMac) el.placeholder='Search… (⌘+K)';
   else el.placeholder='Search… (Ctrl+K)';
 })();
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeModal();
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();document.getElementById('searchInput').focus();}
 });
 
 // ── スマホ UI 制御 ──────────────────────────────────────────────
