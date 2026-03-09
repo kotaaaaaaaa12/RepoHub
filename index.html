@@ -346,7 +346,8 @@
       <select class="fsel" id="sortSel">
         <option value="name-asc">Name A → Z</option>
         <option value="name-desc">Name Z → A</option>
-        <option value="ver">Newest version</option>
+        <option value="ver">Newest first</option>
+        <option value="ver-asc">Oldest first</option>
         <option value="size-desc">Size (large first)</option>
         <option value="size-asc">Size (small first)</option>
       </select>
@@ -400,7 +401,8 @@
       <select class="fsel" id="spSortSel">
         <option value="name-asc">Name A → Z</option>
         <option value="name-desc">Name Z → A</option>
-        <option value="ver">Newest version</option>
+        <option value="ver">Newest first</option>
+        <option value="ver-asc">Oldest first</option>
         <option value="size-desc">Size (large first)</option>
         <option value="size-asc">Size (small first)</option>
       </select>
@@ -767,11 +769,20 @@ function applyFilter(){
     case 'name-asc': a=[...a].sort((x,y)=>x.name.localeCompare(y.name));break;
     case 'name-desc':a=[...a].sort((x,y)=>y.name.localeCompare(x.name));break;
     case 'ver':      a=[...a].sort((x,y)=>{
+      // 更新日で比較（新しい順）
+      const td=s=>s?new Date(s).getTime()||0:0;
+      const dd=td(y.updatedAt)-td(x.updatedAt);
+      if(dd!==0)return dd;
+      // 同じ日付ならsemverで比較
       const sv=s=>{const p=(s||'').replace(/[^0-9.]/g,'').split('.').map(Number);return p[0]*1e8+(p[1]||0)*1e4+(p[2]||0);};
-      const d=sv(y.ver)-sv(x.ver);
-      // バージョン同じなら更新日で比較
-      if(d!==0)return d;
-      return (y.updatedAt||'').localeCompare(x.updatedAt||'');
+      return sv(y.ver)-sv(x.ver);
+    });break;
+    case 'ver-asc':  a=[...a].sort((x,y)=>{
+      const td=s=>s?new Date(s).getTime()||0:0;
+      const dd=td(x.updatedAt)-td(y.updatedAt);
+      if(dd!==0)return dd;
+      const sv=s=>{const p=(s||'').replace(/[^0-9.]/g,'').split('.').map(Number);return p[0]*1e8+(p[1]||0)*1e4+(p[2]||0);};
+      return sv(x.ver)-sv(y.ver);
     });break;
     case 'size-desc':a=[...a].sort((x,y)=>y.size-x.size);break;
     case 'size-asc': a=[...a].sort((x,y)=>x.size-y.size);break;
