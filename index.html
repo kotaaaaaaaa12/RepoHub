@@ -466,6 +466,7 @@ const INSTALLERS=[
 
 let repos=[],allApps=[],filtered=[];
 const SORT_KEY='repohub_sort';
+const REPO_STATE_KEY='repohub_repos';
 
 // ── アプリ更新バッジ ────────────────────────────────────────────────
 const SEEN_KEY='repohub_seen'; // {appKey: ver} 形式で保存
@@ -684,7 +685,8 @@ async function boot(){
     const r=await fetch('./repo.json');
     if(!r.ok) throw new Error('repo.json not found');
     const urls=await r.json();
-    repos=urls.map((url,i)=>({id:`r${i}`,url,name:url,enabled:true,apps:[],status:'pending',err:null}));
+    const savedRepoState=JSON.parse(localStorage.getItem(REPO_STATE_KEY)||'{}');
+    repos=urls.map((url,i)=>({id:`r${i}`,url,name:url,enabled:savedRepoState[url]!==false,apps:[],status:'pending',err:null}));
   }catch(e){
     repos=[{id:'demo',url:'DEMO',name:'Demo Repo',enabled:true,apps:[],status:'pending',err:null}];
     toast('Failed to load repo.json — showing demo data',true);
@@ -738,7 +740,7 @@ async function fetchRepo(repo){
       repo.icon=json.iconURL||json.sourceImage||json.icon||null;
       repo.apps=parseAltStore(json,repo);
       // 最新アプリの更新日をrepoの更新日として使う
-      const dates=repo.apps.map(a=>a.updatedAt).filter(Boolean).sort().reverse();
+      const dates=repo.apps.map(a=>a.updatedAt).filter(a=>{if(!a)return false;const t=new Date(a).getTime();return !isNaN(t)&&t>0&&t<=Date.now();}).sort((a,b)=>new Date(b)-new Date(a));
       repo.lastUpdated=dates[0]||null;
     }catch{
       repo.apps=parsePlist(text,repo);
@@ -874,6 +876,9 @@ function renderRepos(){
     e.stopPropagation();
     const repo=repos.find(r=>r.id===tog.dataset.tog);if(!repo)return;
     repo.enabled=!repo.enabled;
+    const _rs=JSON.parse(localStorage.getItem(REPO_STATE_KEY)||'{}');
+    _rs[repo.url]=repo.enabled;
+    localStorage.setItem(REPO_STATE_KEY,JSON.stringify(_rs));
     if(repo.enabled&&!repo.apps.length) fetchRepo(repo).then(rebuild); else rebuild();
     renderRepos();
   };
@@ -1119,7 +1124,7 @@ function toast(msg,isErr=false){
 
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
-function fmtDate(s){if(!s)return'';try{const d=new Date(s);if(isNaN(d))return'';const now=new Date();const diff=Math.floor((now-d)/86400000);if(diff===0)return'Today';if(diff===1)return'Yesterday';if(diff<30)return`${diff}d ago`;if(diff<365)return`${Math.floor(diff/30)}mo ago`;return`${Math.floor(diff/365)}y ago`;}catch{return'';}}
+function fmtDate(s){if(!s)return'';try{let d=new Date(s);if(isNaN(d))return'';const now=new Date();const diff=Math.floor((now-d)/86400000);if(diff<0)return'';if(diff===0)return'Today';if(diff===1)return'Yesterday';if(diff<30)return`${diff}d ago`;if(diff<365)return`${Math.floor(diff/30)}mo ago`;return`${Math.floor(diff/365)}y ago`;}catch{return'';}}
 function fmtSize(b){return b>=1048576?`${(b/1048576).toFixed(1)} MB`:`${(b/1024).toFixed(0)} KB`;}
 function hue(s){let h=0;for(let i=0;i<(s||'').length;i++)h=s.charCodeAt(i)+((h<<5)-h);const hv=Math.abs(h)%360;return`linear-gradient(135deg,hsl(${hv},60%,32%),hsl(${(hv+55)%360},60%,26%))`;}
 
@@ -1307,7 +1312,8 @@ document.addEventListener('keydown',e=>{
     const el=document.getElementById('spRepoList');
     el.innerHTML=repos.map(r=>{
       const init=(r.name||'R')[0].toUpperCase();
-      const sub=r.status==='loading'?'Loading…':r.status==='err'?'Error':`${r.apps.length} apps`;
+      const updStr=r.lastUpdated?` · ${fmtDate(r.lastUpdated)}`:(r.status==='ok'?'':'' );
+      const sub=r.status==='loading'?'Loading…':r.status==='err'?'Error':`${r.apps.length} apps${updStr}`;
       const ravContent=r.icon?`<img src="${esc(r.icon)}" style="width:100%;height:100%;object-fit:cover;border-radius:8px" loading="lazy" onerror="this.parentNode.style.background='${hue(r.name)}';this.parentNode.textContent='${init}'">`:`${init}`;
     const ravBg=r.icon?'transparent':`${hue(r.name)}`;
     return`<div class="ri ${r.enabled?'':'disabled'}"><div class="rav" style="background:${ravBg}">${ravContent}</div><div class="rinfo"><div class="rname">${esc(r.name)}</div><div class="rsub">${sub}</div></div><div class="toggle ${r.enabled?'on':''}" data-tog="${r.id}"></div></div>`;
@@ -1316,6 +1322,9 @@ document.addEventListener('keydown',e=>{
       e.stopPropagation();
       const repo=repos.find(r=>r.id===t.dataset.tog);if(!repo)return;
       repo.enabled=!repo.enabled;
+      const _rs=JSON.parse(localStorage.getItem(REPO_STATE_KEY)||'{}');
+      _rs[repo.url]=repo.enabled;
+      localStorage.setItem(REPO_STATE_KEY,JSON.stringify(_rs));
       if(repo.enabled&&!repo.apps.length) fetchRepo(repo).then(rebuild); else rebuild();
       renderRepos();
       // 設定シート内も更新
