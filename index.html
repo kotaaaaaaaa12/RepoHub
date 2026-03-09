@@ -799,7 +799,7 @@ function buildCard(a){
   div.dataset.aid=a.id;
   const ico=a.icon?`<img src="${esc(a.icon)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${a.emoji||'📦'}';">`:(a.emoji||'📦');
   const tags=(a.cats||[]).slice(0,2).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
-  const firstCat=(a.cats&&a.cats[0]&&a.cats[0]!=='Unknown')?`<span class="aver" style="background:var(--bg3);color:var(--text3)">${esc(a.cats[0])}</span>`:'';
+  const firstCat=(a.cats&&a.cats[0])?`<span class="aver" style="background:var(--bg3);color:var(--text3)">${esc(a.cats[0])}</span>`:'';
   div.innerHTML=`<div class="srcbadge">${esc(a.repo)}</div>
     <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.repo)}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px"><span class="aver">v${esc(a.ver)}</span>${firstCat}</div></div></div>
     ${a.updatedAt?`<div class="aupdated">${fmtDate(a.updatedAt)}</div>`:''}
