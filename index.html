@@ -1039,7 +1039,11 @@ function renderHist(filter=''){
 // フォーカス時に履歴表示
 document.getElementById('searchInput').addEventListener('focus',()=>renderHist(document.getElementById('searchInput').value));
 // フォーカス外れたら閉じる
-document.getElementById('searchInput').addEventListener('blur',()=>setTimeout(()=>document.getElementById('searchHist').classList.remove('show'),150));
+document.getElementById('searchInput').addEventListener('blur',()=>{
+  const q=document.getElementById('searchInput').value.trim();
+  if(q) saveHist(q);
+  setTimeout(()=>document.getElementById('searchHist').classList.remove('show'),150);
+});
 
 document.getElementById('searchInput').addEventListener('input',e=>{
   clearTimeout(st);st=setTimeout(()=>{query=e.target.value.trim();scheduleFilter();},180);
