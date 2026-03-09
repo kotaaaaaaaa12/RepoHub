@@ -1263,7 +1263,7 @@ function openStats(){
       ${[
         ['Total Apps',totalApps.toLocaleString()],
         ['Repos',enabledRepos.length],
-        ['Total Size',fmtSize(totalSize)],
+        ['Total Size',(totalSize/1073741824).toFixed(2)+' GB'],
         ['Categories',catSorted.length],
       ].map(([l,v])=>`<div style="background:var(--bg3);border-radius:14px;padding:16px;text-align:center">
         <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--accent)">${v}</div>
