@@ -494,7 +494,7 @@ function markAllSeen(){
   });
   localStorage.setItem(SEEN_KEY,JSON.stringify(map));
 }
-let activeCat='all',sort=localStorage.getItem(SORT_KEY)||'name-asc',query='',isGrid=false,showFavOnly=false,_noScrollReset=false;
+let activeCats=new Set(),sort=localStorage.getItem(SORT_KEY)||'name-asc',query='',isGrid=false,showFavOnly=false,_noScrollReset=false;
 
 // お気に入り（LocalStorage永続化）
 const FAV_KEY='repohub_favs';
@@ -568,7 +568,8 @@ function toggleFavFilter(){
   scheduleFilter();
 }
 function updateFavFilterLabel(){
-  const catLabel=(activeCat==='all'||activeCat==='__favs__')?'':` in ${activeCat}`;
+  const selCats=[...activeCats].filter(c=>c!=='__favs__');
+  const catLabel=selCats.length===0?'':(selCats.length===1?` in ${selCats[0]}`:``);
   document.getElementById('favFilterLabel').textContent=showFavOnly?`All Apps`:`Favorites${catLabel}`;
 }
 
@@ -820,12 +821,12 @@ function applyFilter(){
       return inName||inDev;
     });
   }
-  if(activeCat==='__favs__'){
+  if(activeCats.has('__favs__')){
     // カテゴリタグのFavorites → 全カテゴリのfav
     a=a.filter(x=>appInFavs(x));
   } else {
-    // カテゴリ絞り込み
-    if(activeCat!=='all') a=a.filter(x=>x.cats&&x.cats.includes(activeCat));
+    // カテゴリ複数AND絞り込み
+    if(activeCats.size>0) a=a.filter(x=>x.cats&&[...activeCats].every(c=>x.cats.includes(c)));
     // サイドバーのShow Favorites → 現在のカテゴリ内のfavのみ
     if(showFavOnly) a=a.filter(x=>appInFavs(x));
   }
@@ -879,18 +880,34 @@ function renderRepos(){
   };
 }
 
+function syncCatSheet(){
+  const dst=document.getElementById('catSheetBody');
+  const src=document.getElementById('catFilter');
+  if(!dst||!src) return;
+  dst.innerHTML='<div class="tagrow">'+src.innerHTML+'</div>';
+}
+
 function renderCats(){
   const catCount={};
   allApps.forEach(a=>(a.cats||[]).forEach(c=>{catCount[c]=(catCount[c]||0)+1;}));
   const cats=Object.keys(catCount).sort();
   const el=document.getElementById('catFilter');
-  const favSvg=`<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="${activeCat==='__favs__'?'currentColor':'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
-  el.innerHTML=`<span class="tag ${activeCat==='__favs__'?'active':''}" data-c="__favs__" style="display:flex;align-items:center;gap:4px">${favSvg} Favorites <span class="cat-badge">${favs.size}</span></span>`
-    +`<span class="tag ${activeCat==='all'?'active':''}" data-c="all">All <span class="cat-badge">${allApps.length}</span></span>`
-    +cats.map(c=>`<span class="tag ${activeCat===c?'active':''}" data-c="${esc(c)}">${esc(c)} <span class="cat-badge">${catCount[c]}</span></span>`).join('');
+  const favSvg=`<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="${activeCats.has('__favs__')?'currentColor':'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+  const isAll=activeCats.size===0;
+  el.innerHTML=`<span class="tag ${activeCats.has('__favs__')?'active':''}" data-c="__favs__" style="display:flex;align-items:center;gap:4px">${favSvg} Favorites <span class="cat-badge">${favs.size}</span></span>`
+    +`<span class="tag ${isAll?'active':''}" data-c="all">All <span class="cat-badge">${allApps.length}</span></span>`
+    +cats.map(c=>`<span class="tag ${activeCats.has(c)?'active':''}" data-c="${esc(c)}">${esc(c)} <span class="cat-badge">${catCount[c]}</span></span>`).join('');
   el.onclick=e=>{
     const t=e.target.closest('.tag');if(!t)return;
-    activeCat=t.dataset.c;renderCats();updateFavFilterLabel();scheduleFilter();
+    const c=t.dataset.c;
+    if(c==='all'){activeCats.clear();}
+    else if(c==='__favs__'){activeCats.clear();activeCats.add('__favs__');}
+    else{
+      activeCats.delete('__favs__');
+      if(activeCats.has(c)) activeCats.delete(c);
+      else activeCats.add(c);
+    }
+    renderCats();updateFavFilterLabel();scheduleFilter();
   };
 }
 
@@ -1250,17 +1267,21 @@ document.addEventListener('keydown',e=>{
   document.getElementById('spNavCat').addEventListener('click',()=>{
     if(currentSheet===catSheet){closeSheet();setNavActive('spNavApps');return;}
     // カテゴリタグをコピー
-    const dst = document.getElementById('catSheetBody');
-    const src = document.getElementById('catFilter');
-    dst.innerHTML = '<div class="tagrow">' + src.innerHTML + '</div>';
+    syncCatSheet();
     // イベント委譲で処理（__favs__含む全タグ対応）
     dst.onclick=e=>{
       const t=e.target.closest('.tag');if(!t)return;
-      activeCat=t.dataset.c;
-      // __favs__の場合はshowFavOnlyをオフ（カテゴリfavはapplyFilter側で処理）
-      if(activeCat==='__favs__') showFavOnly=false;
+      const c=t.dataset.c;
+      if(c==='all'){activeCats.clear();}
+      else if(c==='__favs__'){activeCats.clear();activeCats.add('__favs__');showFavOnly=false;}
+      else{
+        activeCats.delete('__favs__');
+        if(activeCats.has(c)) activeCats.delete(c);
+        else activeCats.add(c);
+      }
       renderCats();updateFavFilterLabel();scheduleFilter();
-      closeSheet();setNavActive('spNavApps');
+      // catSheetBodyもアクティブ状態を同期
+      syncCatSheet();
     };
     openSheet(catSheet,'spNavCat');
   });
