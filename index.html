@@ -479,6 +479,12 @@ function addUserRepo(url){
   const ur=getUserRepos();
   ur.push(url);
   saveUserRepos(ur);
+  // Workerに通知（fire-and-forget）
+  fetch(`${CATEGORY_WORKER_URL}/report-repo`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({url})
+  }).catch(()=>{});
   // reposに追加してfetch
   const id='u'+Date.now();
   const savedState=JSON.parse(localStorage.getItem(REPO_STATE_KEY)||'{}');
