@@ -322,7 +322,6 @@
       <div class="search-hist" id="searchHist"></div>
     </div>
     <div class="hact">
-      <button class="bico sp-only" id="menuBtn" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
       <button class="bico" id="themeBtn" title="Toggle theme"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
       <button class="bico" id="refreshBtn" title="Refresh all"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
     </div>
@@ -1354,9 +1353,7 @@ document.addEventListener('keydown',e=>{
   });
 
   // ハンバーガーボタン（スマホヘッダー）→ 設定シート
-  document.getElementById('menuBtn').addEventListener('click',()=>{
-    document.getElementById('spNavSettings').click();
-  });
+;
 })();
 
 // ?app=bundle でモーダルを自動オープン
