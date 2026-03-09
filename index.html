@@ -826,7 +826,7 @@ function applyFilter(){
     a=a.filter(x=>appInFavs(x));
   } else {
     // カテゴリ複数AND絞り込み
-    if(activeCats.size>0) a=a.filter(x=>x.cats&&[...activeCats].every(c=>x.cats.includes(c)));
+    if(activeCats.size>0) a=a.filter(x=>x.cats&&[...activeCats].some(c=>x.cats.includes(c)));
     // サイドバーのShow Favorites → 現在のカテゴリ内のfavのみ
     if(showFavOnly) a=a.filter(x=>appInFavs(x));
   }
@@ -1269,6 +1269,7 @@ document.addEventListener('keydown',e=>{
     // カテゴリタグをコピー
     syncCatSheet();
     // イベント委譲で処理（__favs__含む全タグ対応）
+    const dst=document.getElementById('catSheetBody');
     dst.onclick=e=>{
       const t=e.target.closest('.tag');if(!t)return;
       const c=t.dataset.c;
@@ -1280,7 +1281,6 @@ document.addEventListener('keydown',e=>{
         else activeCats.add(c);
       }
       renderCats();updateFavFilterLabel();scheduleFilter();
-      // catSheetBodyもアクティブ状態を同期
       syncCatSheet();
     };
     openSheet(catSheet,'spNavCat');
