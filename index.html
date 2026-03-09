@@ -437,11 +437,16 @@ let activeCat='all',sort='name-asc',query='',isGrid=false,showFavOnly=false;
 
 // お気に入り（LocalStorage永続化）
 const FAV_KEY='repohub_favs';
+// favsのキーは "repoId|bundleId" 形式（idのverサフィックスに依存しない）
+function favKey(a){return a.repoId+'|'+a.bundle+'|'+a.ver;}
+function appInFavs(a){return favs.has(favKey(a));}
 const favs=new Set(JSON.parse(localStorage.getItem(FAV_KEY)||'[]'));
 function saveFavs(){localStorage.setItem(FAV_KEY,JSON.stringify([...favs]));}
 function toggleFav(id){
-  if(favs.has(id)){favs.delete(id);toast('Removed from favorites');}
-  else{favs.add(id);toast('Added to favorites ♥');}
+  const a=appMap[id];if(!a)return;
+  const k=favKey(a);
+  if(favs.has(k)){favs.delete(k);toast('Removed from favorites');}
+  else{favs.add(k);toast('Added to favorites ♥');}
   saveFavs();
   renderCats();
   scheduleFilter();
@@ -702,7 +707,7 @@ function applyFilter(){
       return inName||inDev;
     });
   }
-  if(activeCat==='__favs__'||showFavOnly) a=a.filter(x=>favs.has(x.id));
+  if(activeCat==='__favs__'||showFavOnly) a=a.filter(x=>appInFavs(x));
   else if(activeCat!=='all') a=a.filter(x=>x.cats&&x.cats.includes(activeCat));
   switch(sort){
     case 'name-asc': a=[...a].sort((x,y)=>x.name.localeCompare(y.name));break;
@@ -769,7 +774,7 @@ const VIRT = {
 
 function buildCard(a){
   const div=document.createElement('div');
-  div.className='card'+(favs.has(a.id)?' fav-card':'');
+  div.className='card'+(appInFavs(a)?' fav-card':'');
   div.dataset.aid=a.id;
   const ico=a.icon?`<img src="${esc(a.icon)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${a.emoji||'📦'}';">`:(a.emoji||'📦');
   const tags=(a.cats||[]).slice(0,2).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
@@ -778,7 +783,7 @@ function buildCard(a){
     <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.repo)}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px"><span class="aver">v${esc(a.ver)}</span>${firstCat}</div></div></div>
     ${a.updatedAt?`<div class="aupdated">${fmtDate(a.updatedAt)}</div>`:''}
     <div class="adesc">${esc(a.desc||'No description')}</div>
-    <div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-fav ${favs.has(a.id)?'on':''}" data-fav="${esc(a.id)}" title="Favorite"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='${favs.has(a.id)?'#ff6584':'none'}' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg></button><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>`;
+    <div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-fav ${appInFavs(a)?'on':''}" data-fav="${esc(a.id)}" title="Favorite"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='${appInFavs(a)?'#ff6584':'none'}' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg></button><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>`;
   return div;
 }
 
@@ -896,7 +901,7 @@ function openModal(app,showPicker=false){
     <div class="mactions">
       <button class="btn-modal-install" id="mInstTog"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg> Install via…</button>
       <button class="btn-modal-dl" id="mDl"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download IPA</button>
-      <button class="btn-modal-fav ${favs.has(app.id)?'on':''}" id="mFav"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="${favs.has(app.id)?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
+      <button class="btn-modal-fav ${appInFavs(app)?'on':''}" id="mFav"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="${appInFavs(app)?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg></button>
     </div>
     <div id="picker" style="display:${showPicker?'block':'none'}">${pickerHTML}</div>
   `;
@@ -915,7 +920,7 @@ function openModal(app,showPicker=false){
   document.getElementById('mFav').onclick=()=>{
     toggleFav(app.id);
     const btn=document.getElementById('mFav');
-    const on=favs.has(app.id);
+    const on=appInFavs(app);
     btn.className='btn-modal-fav'+(on?' on':'');
     btn.querySelector('svg').setAttribute('fill',on?'currentColor':'none');
   };
