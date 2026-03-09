@@ -360,7 +360,7 @@
   <div class="ca">
     <div class="cbar">
       <div class="ccount" id="appCount">Loading…</div>
-
+      <button id="randomBtn" title="Random app" style="background:transparent;border:1px solid var(--border);border-radius:99px;padding:5px 10px;cursor:pointer;color:var(--text3);display:flex;align-items:center;gap:5px;font-size:12px;transition:all .18s" onmouseenter="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text3)'"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="3"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="16" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="16" r="1.5" fill="currentColor"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg></button>
     </div>
     <div class="grid list" id="appGrid">
       <div class="lbox"><div class="spin"></div>Loading repositories…</div>
@@ -375,6 +375,13 @@
 <div class="sheet-overlay" id="sheetOverlay"></div>
 
 <!-- カテゴリシート -->
+<div class="bottom-sheet" id="histSheet">
+  <div class="sheet-header">
+    <div class="sheet-title">History</div>
+    <button style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:12px;padding:4px 8px;border-radius:6px" onclick="localStorage.removeItem('repohub_recent');renderRecent();renderHistSheet()">Clear all</button>
+  </div>
+  <div class="sheet-body" id="histSheetBody"></div>
+</div>
 <div class="bottom-sheet" id="catSheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">Category</div>
@@ -424,6 +431,9 @@
     <button class="sp-nb" id="spNavSearch">
       <span class="sp-nb-ico"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>Search
     </button>
+    <button class="sp-nb" id="spNavHist">
+      <span class="sp-nb-ico"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>History
+    </button>
     <button class="sp-nb" id="spNavSettings">
       <span class="sp-nb-ico"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>Settings
     </button>
@@ -463,7 +473,24 @@ function addRecent(app){
   if(r.length>RECENT_MAX) r=r.slice(0,RECENT_MAX);
   localStorage.setItem(RECENT_KEY,JSON.stringify(r));
   renderRecent();
+  renderHistSheet();
 }
+function renderHistSheet(){
+  const el=document.getElementById('histSheetBody');
+  if(!el) return;
+  const r=getRecent();
+  if(!r.length){el.innerHTML='<div style="font-size:13px;color:var(--text3);padding:16px 0;text-align:center">No history yet</div>';return;}
+  el.innerHTML='<div class="tagrow" style="flex-direction:column;gap:0">'+r.map(item=>{
+    const ico=item.icon?`<img src="${item.icon}" width="36" height="36" style="border-radius:9px;object-fit:cover;flex-shrink:0" loading="lazy" onerror="this.style.display='none'">`:`<span style="font-size:20px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--bg3);border-radius:9px">${item.emoji||'📦'}</span>`;
+    return`<div class="ri" style="cursor:pointer;padding:10px 4px;gap:12px" data-rid="${item.id}">${ico}<div class="rinfo"><div class="rname">${item.name}</div><div class="rsub">${item.repo} · v${item.ver}</div></div><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text3)"><polyline points="9 18 15 12 9 6"/></svg></div>`;
+  }).join('')+'</div>';
+  el.onclick=e=>{
+    const row=e.target.closest('[data-rid]');if(!row)return;
+    const app=appMap[row.dataset.rid];
+    if(app){closeSheet();setNavActive('spNavApps');setTimeout(()=>openModal(app),100);}
+  };
+}
+
 function renderRecent(){
   const el=document.getElementById('recentList');
   if(!el) return;
@@ -1195,6 +1222,14 @@ document.addEventListener('keydown',e=>{
   });
 
   // Search
+  // History タブ
+  const histSheet = document.getElementById('histSheet');
+  document.getElementById('spNavHist').addEventListener('click',()=>{
+    if(currentSheet===histSheet){closeSheet();setNavActive('spNavApps');return;}
+    renderHistSheet();
+    openSheet(histSheet,'spNavHist');
+  });
+
   document.getElementById('spNavSearch').addEventListener('click',()=>{
     closeSheet();setNavActive('spNavApps');
     document.getElementById('searchInput').focus();
@@ -1276,6 +1311,13 @@ if('serviceWorker' in navigator){
       .catch(err=>console.warn('SW registration failed:',err));
   });
 }
+
+// サイコロボタン
+document.getElementById('randomBtn').addEventListener('click',()=>{
+  if(!filtered.length) return;
+  const app=filtered[Math.floor(Math.random()*filtered.length)];
+  openModal(app);
+});
 
 boot();
 </script>
