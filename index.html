@@ -52,6 +52,14 @@
   .fsel{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:8px 30px 8px 11px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;transition:border-color .2s}
   .fsel:focus{border-color:var(--accent)}
   .fgap{margin-top:10px}
+  /* 検索履歴ドロップダウン */
+  .search-hist{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);z-index:200;overflow:hidden;display:none}
+  .search-hist.show{display:block}
+  .sh-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;font-size:13px;color:var(--text2);transition:background .15s}
+  .sh-item:hover{background:var(--bg3);color:var(--text)}
+  .sh-item svg{flex-shrink:0;color:var(--text3)}
+  .sh-del{margin-left:auto;color:var(--text3);padding:2px 4px;border-radius:4px;font-size:11px;opacity:0;transition:opacity .15s}
+  .sh-item:hover .sh-del{opacity:1}
   /* カスタムスクロールバー */
   ::-webkit-scrollbar{width:4px;height:4px}
   ::-webkit-scrollbar-track{background:transparent}
@@ -303,6 +311,7 @@
     <div class="hsearch">
       <span class="sico"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
       <input type="text" id="searchInput" placeholder="Search…" autocomplete="off">
+      <div class="search-hist" id="searchHist"></div>
     </div>
     <div class="hact">
       <button class="bico sp-only" id="menuBtn" title="Menu"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
@@ -500,7 +509,7 @@ async function fetchCategoryBatch(ids){
 }
 
 async function enrichCategories(apps, onProgress){
-  const targets=apps.filter(a=>!(a.cats&&a.cats.length>0)&&a.bundle&&!a.bundle.startsWith('com.demo'));
+  const targets=apps.filter(a=>!(a.cats&&a.cats.length>0&&a.cats[0]!=='Unknown')&&a.bundle&&!a.bundle.startsWith('com.demo'));
   if(!targets.length){onProgress&&onProgress(0,0,null);return;}
 
   const total=targets.length;
@@ -683,15 +692,28 @@ function scheduleFilter(){
 function applyFilter(){
   let a=allApps;
   if(query){
-    const q=query.toLowerCase();
-    a=a.filter(x=>x._ql.includes(q));
+    const q=query.toLowerCase().trim();
+    const words=q.split(/\s+/).filter(Boolean);
+    a=a.filter(x=>{
+      // 全ワードがname or devに含まれるか
+      const inName=words.every(w=>x.name.toLowerCase().includes(w));
+      const inDev=words.every(w=>x.dev.toLowerCase().includes(w));
+      // どちらかに全ワード含まれればOK、descは含めない
+      return inName||inDev;
+    });
   }
   if(activeCat==='__favs__'||showFavOnly) a=a.filter(x=>favs.has(x.id));
   else if(activeCat!=='all') a=a.filter(x=>x.cats&&x.cats.includes(activeCat));
   switch(sort){
     case 'name-asc': a=[...a].sort((x,y)=>x.name.localeCompare(y.name));break;
     case 'name-desc':a=[...a].sort((x,y)=>y.name.localeCompare(x.name));break;
-    case 'ver':      a=[...a].sort((x,y)=>y.ver.localeCompare(x.ver));break;
+    case 'ver':      a=[...a].sort((x,y)=>{
+      const sv=s=>{const p=(s||'').replace(/[^0-9.]/g,'').split('.').map(Number);return p[0]*1e8+(p[1]||0)*1e4+(p[2]||0);};
+      const d=sv(y.ver)-sv(x.ver);
+      // バージョン同じなら更新日で比較
+      if(d!==0)return d;
+      return (y.updatedAt||'').localeCompare(x.updatedAt||'');
+    });break;
     case 'size-desc':a=[...a].sort((x,y)=>y.size-x.size);break;
     case 'size-asc': a=[...a].sort((x,y)=>x.size-y.size);break;
     default: a=[...a];
@@ -751,8 +773,9 @@ function buildCard(a){
   div.dataset.aid=a.id;
   const ico=a.icon?`<img src="${esc(a.icon)}" alt="" loading="lazy" onerror="this.parentNode.textContent='${a.emoji||'📦'}';">`:(a.emoji||'📦');
   const tags=(a.cats||[]).slice(0,2).map(c=>`<span class="atag">${esc(c)}</span>`).join('');
+  const firstCat=(a.cats&&a.cats[0]&&a.cats[0]!=='Unknown')?`<span class="aver" style="background:var(--bg3);color:var(--text3)">${esc(a.cats[0])}</span>`:'';
   div.innerHTML=`<div class="srcbadge">${esc(a.repo)}</div>
-    <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><span class="aver">v${esc(a.ver)}</span></div></div>
+    <div class="ctop"><div class="aico">${ico}</div><div class="ameta"><div class="aname">${esc(a.name)}</div><div class="adev">${esc(a.dev)}</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px"><span class="aver">v${esc(a.ver)}</span>${firstCat}</div></div></div>
     ${a.updatedAt?`<div class="aupdated">${fmtDate(a.updatedAt)}</div>`:''}
     <div class="adesc">${esc(a.desc||'No description')}</div>
     <div class="cbot"><div class="atags">${tags}</div><div class="cbtnrow"><button class="btn-fav ${favs.has(a.id)?'on':''}" data-fav="${esc(a.id)}" title="Favorite"><svg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='${favs.has(a.id)?'#ff6584':'none'}' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'/></svg></button><button class="btn-install" data-aid="${esc(a.id)}">Install</button><button class="btn-dl" data-dl="${esc(a.dl)}">↓ DL</button></div></div>`;
@@ -972,8 +995,45 @@ document.getElementById('refreshBtn').addEventListener('click',async()=>{
   finishLoading();
 });
 let st;
+// ── 検索履歴 ──────────────────────────────────────────────────────
+const HIST_KEY='repohub_hist';
+const HIST_MAX=6;
+function getHist(){return JSON.parse(localStorage.getItem(HIST_KEY)||'[]');}
+function saveHist(q){
+  if(!q.trim()) return;
+  let h=getHist().filter(x=>x!==q);
+  h.unshift(q);
+  if(h.length>HIST_MAX) h=h.slice(0,HIST_MAX);
+  localStorage.setItem(HIST_KEY,JSON.stringify(h));
+}
+function delHist(q){
+  localStorage.setItem(HIST_KEY,JSON.stringify(getHist().filter(x=>x!==q)));
+}
+function renderHist(filter=''){
+  const el=document.getElementById('searchHist');
+  const hist=getHist().filter(h=>!filter||h.toLowerCase().includes(filter.toLowerCase()));
+  if(!hist.length){el.classList.remove('show');return;}
+  el.innerHTML=hist.map(h=>`<div class="sh-item" data-sh="${h.replace(/"/g,'&quot;')}"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${h}<span class="sh-del" data-shdel="${h.replace(/"/g,'&quot;')}">✕</span></div>`).join('');
+  el.classList.add('show');
+  el.onclick=e=>{
+    const del=e.target.closest('[data-shdel]');
+    const item=e.target.closest('[data-sh]');
+    if(del){e.stopPropagation();delHist(del.dataset.shdel);renderHist(filter);return;}
+    if(item){
+      const q=item.dataset.sh;
+      document.getElementById('searchInput').value=q;
+      query=q;scheduleFilter();el.classList.remove('show');
+    }
+  };
+}
+// フォーカス時に履歴表示
+document.getElementById('searchInput').addEventListener('focus',()=>renderHist(document.getElementById('searchInput').value));
+// フォーカス外れたら閉じる
+document.getElementById('searchInput').addEventListener('blur',()=>setTimeout(()=>document.getElementById('searchHist').classList.remove('show'),150));
+
 document.getElementById('searchInput').addEventListener('input',e=>{
   clearTimeout(st);st=setTimeout(()=>{query=e.target.value.trim();scheduleFilter();},180);
+  renderHist(e.target.value);
 });
 document.getElementById('sortSel').addEventListener('change',e=>{sort=e.target.value;scheduleFilter();});
 
@@ -992,6 +1052,10 @@ document.getElementById('sortSel').addEventListener('change',e=>{sort=e.target.v
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape')closeModal();
   if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();document.getElementById('searchInput').focus();}
+  if(e.key==='Enter'&&e.target.id==='searchInput'){
+    const q=e.target.value.trim();
+    if(q){saveHist(q);document.getElementById('searchHist').classList.remove('show');}
+  }
 });
 
 // ── スマホ UI 制御 ──────────────────────────────────────────────
