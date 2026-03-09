@@ -324,6 +324,13 @@
 <div class="main">
   <aside class="sidebar">
     <div class="sc">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="stitle" style="margin-bottom:0"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Recent</div>
+        <button style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:11px;padding:2px 4px" onclick="localStorage.removeItem('repohub_recent');renderRecent()">Clear</button>
+      </div>
+      <div id="recentList"></div>
+    </div>
+    <div class="sc">
       <div class="stitle"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> Repositories</div>
       <div id="repoList"></div>
     </div>
@@ -438,10 +445,37 @@ const INSTALLERS=[
 ];
 
 let repos=[],allApps=[],filtered=[];
-let activeCat='all',sort='name-asc',query='',isGrid=false,showFavOnly=false,_noScrollReset=false;
+const SORT_KEY='repohub_sort';
+let activeCat='all',sort=localStorage.getItem(SORT_KEY)||'name-asc',query='',isGrid=false,showFavOnly=false,_noScrollReset=false;
 
 // お気に入り（LocalStorage永続化）
 const FAV_KEY='repohub_favs';
+
+// ── 閲覧履歴 ──────────────────────────────────────────────────────
+const RECENT_KEY='repohub_recent';
+const RECENT_MAX=10;
+function getRecent(){return JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');}
+function addRecent(app){
+  let r=getRecent().filter(x=>x.id!==app.id);
+  r.unshift({id:app.id,name:app.name,icon:app.icon||null,repo:app.repo,ver:app.ver,emoji:app.emoji||null});
+  if(r.length>RECENT_MAX) r=r.slice(0,RECENT_MAX);
+  localStorage.setItem(RECENT_KEY,JSON.stringify(r));
+  renderRecent();
+}
+function renderRecent(){
+  const el=document.getElementById('recentList');
+  if(!el) return;
+  const r=getRecent();
+  if(!r.length){el.innerHTML='<div style="font-size:11px;color:var(--text3);padding:4px 0">No history yet</div>';return;}
+  el.innerHTML=r.map(item=>{
+    const ico=item.icon?`<img src="${item.icon}" width="24" height="24" style="border-radius:6px;object-fit:cover;flex-shrink:0" loading="lazy" onerror="this.style.display='none'">`:`<span style="font-size:14px">${item.emoji||'📦'}</span>`;
+    return`<div class="ri" style="cursor:pointer;padding:6px 8px" data-rid="${item.id}">${ico}<div class="rinfo"><div class="rname" style="font-size:12px">${item.name}</div><div class="rsub">${item.repo}</div></div></div>`;
+  }).join('');
+  el.onclick=e=>{
+    const row=e.target.closest('[data-rid]');if(!row)return;
+    const app=appMap[row.dataset.rid];if(app) openModal(app);
+  };
+}
 // favsのキーは "repoId|bundleId" 形式（idのverサフィックスに依存しない）
 function favKey(a){return a.repoId+'|'+a.bundle+'|'+a.ver;}
 function appInFavs(a){return favs.has(favKey(a));}
@@ -606,7 +640,7 @@ async function boot(){
   // Phase 2: rebuild and collect all apps
   allApps=repos.filter(r=>r.enabled).flatMap(r=>r.apps);
   appMap={};allApps.forEach(a=>appMap[a.id]=a);
-  applyFilter();renderCats();renderRepos();
+  applyFilter();renderCats();renderRepos();renderRecent();
 
   // Phase 3: iTunes API category lookup (50% → 95%)
   const needCat=allApps.filter(a=>!(a.cats&&a.cats.length>0)&&a.bundle&&!a.bundle.startsWith('com.demo'));
@@ -867,7 +901,7 @@ function renderApps(){
     const btn_f=e.target.closest('.btn-fav');
     const card=e.target.closest('.card');
     if(btn_i){e.stopPropagation();const app=appMap[btn_i.dataset.aid];if(app)openModal(app,true);return;}
-    if(btn_d){e.stopPropagation();const url=btn_d.dataset.dl;if(!url||url==='#'){toast('No download URL available',true);return;}window.open(url,'_blank');toast('Download started!');return;}
+    if(btn_d){e.stopPropagation();const url=btn_d.dataset.dl;if(!url||url==='#'){toast('No download URL available',true);return;}const _da=appMap[e.target.closest('.card')?.dataset.aid];if(_da)addRecent(_da);window.open(url,'_blank');toast('Download started!');return;}
     if(btn_f){e.stopPropagation();toggleFav(btn_f.dataset.fav);return;}
     if(card){const app=appMap[card.dataset.aid];if(app)openModal(app);}
   };
@@ -928,12 +962,18 @@ function openModal(app,showPicker=false){
   `;
   // URLシェア：?app=bundle を履歴に積む
   history.replaceState(null,'',`?app=${encodeURIComponent(app.id)}`);
+  // 閲覧履歴に追加
+  addRecent(app);
   document.getElementById('overlay').classList.add('open');
   document.getElementById('mClose').onclick=closeModal;
   document.getElementById('mInstTog').onclick=()=>{
     const p=document.getElementById('picker');
-    p.style.display=p.style.display==='none'?'block':'none';
+    const isHidden=p.style.display==='none';
+    p.style.display=isHidden?'block':'none';
+    if(isHidden) setTimeout(()=>p.scrollIntoView({behavior:'smooth',block:'nearest'}),50);
   };
+  // showPickerがtrueの場合は最初からスクロール
+  if(showPicker) setTimeout(()=>document.getElementById('picker').scrollIntoView({behavior:'smooth',block:'nearest'}),100);
   document.getElementById('mDl').onclick=()=>{
     if(!hasDl){toast('No download URL',true);return;}
     window.open(app.dl,'_blank');toast('Download started!');
@@ -1068,7 +1108,8 @@ document.getElementById('searchInput').addEventListener('input',e=>{
   clearTimeout(st);st=setTimeout(()=>{query=e.target.value.trim();scheduleFilter();},180);
   renderHist(e.target.value);
 });
-document.getElementById('sortSel').addEventListener('change',e=>{sort=e.target.value;scheduleFilter();});
+document.getElementById('sortSel').value=sort;
+document.getElementById('sortSel').addEventListener('change',e=>{sort=e.target.value;localStorage.setItem(SORT_KEY,sort);scheduleFilter();});
 
 
 // Search placeholderをデバイスに応じて設定
