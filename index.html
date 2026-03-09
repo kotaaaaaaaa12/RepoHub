@@ -323,6 +323,7 @@
     </div>
     <div class="hact">
       <button class="bico" id="themeBtn" title="Toggle theme"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+      <button class="bico" id="statsBtn" title="Stats"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>
       <button class="bico" id="refreshBtn" title="Refresh all"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
     </div>
   </div>
@@ -372,6 +373,17 @@
     <div class="grid list" id="appGrid">
       <div class="lbox"><div class="spin"></div>Loading repositories…</div>
     </div>
+  </div>
+</div>
+
+<!-- 統計モーダル -->
+<div id="statsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1100;overflow-y:auto;padding:20px 16px">
+  <div id="statsModal" style="max-width:720px;margin:0 auto;background:var(--card);border-radius:20px;padding:28px;position:relative">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+      <div style="font-family:'Space Mono',monospace;font-size:16px;font-weight:700;color:var(--text)">📊 Stats</div>
+      <button id="statsClose" style="background:var(--bg3);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div id="statsContent"></div>
   </div>
 </div>
 
@@ -1018,7 +1030,24 @@ function virtRender(){
   const grid=document.getElementById('appGrid');
   const total=filtered.length;
   if(!total){
-    grid.innerHTML=`<div class="ebox"><div class="eico"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg></div>No apps found</div>`;
+    const EMPTY_ICO=`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="7.5 4.21 12 6.81 16.5 4.21"/><polyline points="7.5 19.79 7.5 14.6 3 12"/><polyline points="21 12 16.5 14.6 16.5 19.79"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`;
+    const SEARCH_ICO=`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>`;
+    const FAV_ICO=`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+    let ico=EMPTY_ICO, msg='No apps found', sub='';
+    if(query){
+      ico=SEARCH_ICO;
+      msg=`No results for "${esc(query)}"`;
+      sub='Try different keywords or clear the search';
+    } else if(activeCats.has('__favs__')||showFavOnly){
+      ico=FAV_ICO;
+      msg='No favorites yet';
+      sub='Tap ♥ on any app to add it here';
+    } else if(activeCats.size>0){
+      ico=SEARCH_ICO;
+      msg='No apps in selected categories';
+      sub=[...activeCats].join(' + ');
+    }
+    grid.innerHTML=`<div class="ebox"><div class="eico">${ico}</div><div>${msg}</div>${sub?`<div style="font-size:12px;margin-top:6px;color:var(--text3)">${sub}</div>`:''}</div>`;
     return;
   }
 
@@ -1195,6 +1224,79 @@ function toast(msg,isErr=false){
 
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
+function fmtSize(b){if(!b)return'0B';if(b<1024)return b+'B';if(b<1048576)return(b/1024).toFixed(1)+'KB';if(b<1073741824)return(b/1048576).toFixed(1)+'MB';return(b/1073741824).toFixed(2)+'GB';}
+
+function openStats(){
+  const ov=document.getElementById('statsOverlay');
+  const el=document.getElementById('statsContent');
+  ov.style.display='block';
+
+  // ── 集計 ──
+  const totalApps=allApps.length;
+  const totalSize=allApps.reduce((s,a)=>s+(a.size||0),0);
+  const enabledRepos=repos.filter(r=>r.enabled&&!r.isDemo);
+
+  // カテゴリ分布
+  const catCount={};
+  allApps.forEach(a=>(a.cats||['Unknown']).slice(0,1).forEach(c=>{catCount[c]=(catCount[c]||0)+1;}));
+  const catSorted=Object.entries(catCount).sort((a,b)=>b[1]-a[1]);
+  const topCats=catSorted.slice(0,10);
+  const catMax=topCats[0]?.[1]||1;
+
+  // repo別アプリ数
+  const repoCount={};
+  allApps.forEach(a=>{repoCount[a.repo]=(repoCount[a.repo]||0)+1;});
+  const repoSorted=Object.entries(repoCount).sort((a,b)=>b[1]-a[1]);
+  const repoMax=repoSorted[0]?.[1]||1;
+
+  // repo別サイズ
+  const repoSize={};
+  allApps.forEach(a=>{repoSize[a.repo]=(repoSize[a.repo]||0)+(a.size||0);});
+
+  const ACCENT='#6c63ff';
+  const ACCENT2='#ff6584';
+  const BAR=(val,max,color)=>`<div style="flex:1;background:var(--bg3);border-radius:4px;overflow:hidden;height:8px"><div style="width:${Math.round(val/max*100)}%;height:100%;background:${color};border-radius:4px;transition:width .4s"></div></div>`;
+
+  el.innerHTML=`
+    <!-- サマリーカード -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:28px">
+      ${[
+        ['Total Apps',totalApps.toLocaleString()],
+        ['Repos',enabledRepos.length],
+        ['Total Size',fmtSize(totalSize)],
+        ['Categories',catSorted.length],
+      ].map(([l,v])=>`<div style="background:var(--bg3);border-radius:14px;padding:16px;text-align:center">
+        <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--accent)">${v}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">${l}</div>
+      </div>`).join('')}
+    </div>
+
+    <!-- カテゴリ分布 -->
+    <div style="margin-bottom:28px">
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.06em">Top Categories</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${topCats.map(([c,n])=>`<div style="display:flex;align-items:center;gap:10px">
+          <div style="width:130px;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0">${esc(c)}</div>
+          ${BAR(n,catMax,ACCENT)}
+          <div style="width:50px;text-align:right;font-size:12px;font-family:'Space Mono',monospace;color:var(--text3);flex-shrink:0">${n.toLocaleString()}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- repo別アプリ数 -->
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:12px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:.06em">Apps per Repo</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${repoSorted.map(([r,n])=>`<div style="display:flex;align-items:center;gap:10px">
+          <div style="width:130px;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0" title="${esc(r)}">${esc(r)}</div>
+          ${BAR(n,repoMax,ACCENT2)}
+          <div style="width:50px;text-align:right;font-size:12px;font-family:'Space Mono',monospace;color:var(--text3);flex-shrink:0">${n.toLocaleString()}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
 function fmtDate(s){if(!s)return'';try{let d=new Date(s);if(isNaN(d))return'';const now=new Date();const diff=Math.floor((now-d)/86400000);if(diff<0)return'';if(diff===0)return'Today';if(diff===1)return'Yesterday';if(diff<30)return`${diff}d ago`;if(diff<365)return`${Math.floor(diff/30)}mo ago`;return`${Math.floor(diff/365)}y ago`;}catch{return'';}}
 function fmtSize(b){return b>=1048576?`${(b/1048576).toFixed(1)} MB`:`${(b/1024).toFixed(0)} KB`;}
 function hue(s){let h=0;for(let i=0;i<(s||'').length;i++)h=s.charCodeAt(i)+((h<<5)-h);const hv=Math.abs(h)%360;return`linear-gradient(135deg,hsl(${hv},60%,32%),hsl(${(hv+55)%360},60%,26%))`;}
@@ -1282,6 +1384,9 @@ document.getElementById('searchInput').addEventListener('input',e=>{
   clearTimeout(st);st=setTimeout(()=>{query=e.target.value.trim();scheduleFilter();},180);
   renderHist(e.target.value);
 });
+document.getElementById('statsBtn').addEventListener('click',openStats);
+document.getElementById('statsClose').addEventListener('click',()=>{document.getElementById('statsOverlay').style.display='none';});
+document.getElementById('statsOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('statsOverlay')) document.getElementById('statsOverlay').style.display='none';});
 document.getElementById('sortSel').value=sort;
 document.getElementById('sortSel').addEventListener('change',e=>{sort=e.target.value;localStorage.setItem(SORT_KEY,sort);scheduleFilter();});
 
@@ -1432,7 +1537,10 @@ document.addEventListener('keydown',e=>{
   // 設定内：ソート
   document.getElementById('spSortSel').addEventListener('change',e=>{
     sort=e.target.value;
-    document.getElementById('sortSel').value=sort;
+    document.getElementById('statsBtn').addEventListener('click',openStats);
+document.getElementById('statsClose').addEventListener('click',()=>{document.getElementById('statsOverlay').style.display='none';});
+document.getElementById('statsOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('statsOverlay')) document.getElementById('statsOverlay').style.display='none';});
+document.getElementById('sortSel').value=sort;
     applyFilter();
   });
 
