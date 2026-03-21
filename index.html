@@ -1016,8 +1016,15 @@ function toggleAllRepos(btn){
     _rs[r.url]=newState;
   });
   localStorage.setItem(REPO_STATE_KEY,JSON.stringify(_rs));
+  // ボタンを即時更新（rebuild後だと非同期でズレる場合があるため）
+  ['repoToggleAllBtn','spRepoToggleAllBtn'].forEach(id=>{
+    const b=document.getElementById(id);
+    if(!b)return;
+    b.textContent=newState?'All OFF':'All ON';
+    b.style.borderColor=newState?'var(--danger)':'var(--accent)';
+    b.style.color=newState?'var(--danger)':'var(--accent)';
+  });
   rebuild();
-  updateRepoToggleBtn();
 }
 
 function syncCatSheet(){
