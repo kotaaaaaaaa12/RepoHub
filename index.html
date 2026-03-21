@@ -1554,6 +1554,7 @@ document.addEventListener('keydown',e=>{
     spHtml+=addRepoFormHtml('spAddRepoInput','spAddRepoBtn','spAddRepoErr');
     el.innerHTML=spHtml;
     bindAddRepoBtn('spAddRepoInput','spAddRepoBtn','spAddRepoErr');
+    updateRepoToggleBtn();
     el.onclick=e=>{
       const del=e.target.closest('[data-del]');
       const tog=e.target.closest('[data-tog]');
