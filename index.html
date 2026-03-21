@@ -621,24 +621,7 @@ function updateFavFilterLabel(){
 // Category Worker URL — デプロイ後にここを書き換えてな
 const CATEGORY_WORKER_URL = 'https://repohub-category-worker.kotaaaaaaaa12.workers.dev';
 
-const CAT_CACHE_KEY='repohub_catcache';
-const CAT_CACHE_TTL=60*60*24*7; // 7日間(秒)
-function loadCatCache(){
-  try{
-    const raw=localStorage.getItem(CAT_CACHE_KEY);
-    if(!raw) return {};
-    const {data,ts}=JSON.parse(raw);
-    // TTL切れてたら全破棄
-    if(Date.now()/1000-ts>CAT_CACHE_TTL) return {};
-    return data||{};
-  }catch{return {};}
-}
-function saveCatCache(){
-  try{
-    localStorage.setItem(CAT_CACHE_KEY,JSON.stringify({data:catCache,ts:Math.floor(Date.now()/1000)}));
-  }catch{}
-}
-const catCache=loadCatCache();
+const catCache={};
 
 // 単体取得（フォールバック用）
 async function fetchCategory(bundleId){
@@ -649,11 +632,9 @@ async function fetchCategory(bundleId){
     const d=await r.json();
     const cat=d.category||'Unknown';
     catCache[bundleId]=cat;
-    saveCatCache();
     return cat;
   }catch{}
   catCache[bundleId]='Unknown';
-  saveCatCache();
   return 'Unknown';
 }
 
@@ -688,7 +669,6 @@ async function fetchCategoryBatch(ids){
       for(const id of chunk) catCache[id]='Unknown';
     }
   }
-  saveCatCache();
 }
 
 async function enrichCategories(apps, onProgress){
@@ -723,7 +703,6 @@ async function enrichCategories(apps, onProgress){
     fetched+=chunk.length;
     onProgress&&onProgress(fetched,unique.length||1,`Categorizing… (${fetched}/${unique.length||total})`);
   }
-  saveCatCache();
 
   // キャッシュから各アプリにセット
   for(const a of targets) a.cats=[catCache[a.bundle]||'Unknown'];
@@ -1333,7 +1312,6 @@ document.getElementById('refreshBtn').addEventListener('click',async()=>{
   repos.forEach(r=>{r.apps=[];r.status='pending';r.err=null;});
   // clear cache so iTunes re-fetches
   Object.keys(catCache).forEach(k=>delete catCache[k]);
-  localStorage.removeItem(CAT_CACHE_KEY);
   allApps=[];filtered=[];renderApps();renderRepos();
 
   // Phase 1: repos (10→50%)
