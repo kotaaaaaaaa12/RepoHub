@@ -994,7 +994,8 @@ function updateRepoToggleBtn(){
     const btn=document.getElementById(id);
     if(!btn) return;
     btn.textContent=allOn?'All OFF':'All ON';
-    btn.style.cssText='background:none;border:1px solid '+(allOn?'#f87171':'var(--accent)')+';border-radius:99px;cursor:pointer;color:'+(allOn?'#f87171':'var(--accent)')+';font-size:11px;padding:2px 8px;transition:all .18s';
+    btn.style.cssText='background:none;border:1px solid '+(allOn?'#f87171':'#6c63ff')+';border-radius:99px;cursor:pointer;color:'+(allOn?'#f87171':'#6c63ff')+';font-size:11px;padding:2px 8px;transition:all .18s';
+    btn.setAttribute('data-allOn', allOn?'1':'0');
   });
 }
 
@@ -1005,7 +1006,16 @@ function toggleAllRepos(btn){
   repos.forEach(r=>{r.enabled=newState;_rs[r.url]=newState;});
   localStorage.setItem(REPO_STATE_KEY,JSON.stringify(_rs));
   updateRepoToggleBtn();
-  rebuild();
+  if(newState){
+    const needFetch=repos.filter(r=>!r.isDemo&&!r.apps.length);
+    if(needFetch.length){
+      Promise.all(needFetch.map(r=>fetchRepo(r))).then(()=>{rebuild();updateRepoToggleBtn();});
+    } else {
+      rebuild();
+    }
+  } else {
+    rebuild();
+  }
 }
 
 function syncCatSheet(){
